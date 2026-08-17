@@ -13,6 +13,10 @@ Anyone can run a node and mine. No registration, no permission — a CPU is enou
 
 **[How to join and mine →](docs/join-and-mine.md)** ([中文](docs/join-and-mine-zh.md))
 
+**What am I mining? The spec is public:**
+[whitepaper](docs/spec/whitepaper.md) · [protocol specification](docs/spec/protocol-spec.md) ·
+[frozen consensus parameters](docs/spec/consensus-parameters.md)
+
 | service | URL |
 |---|---|
 | chain health | https://explorer.qumbra.org |
@@ -28,3 +32,8 @@ deployment) is private during T1 and opens on its own schedule; these documents 
 at publication and it remains authoritative.
 
 **Found something broken? [Open an issue.](https://github.com/qumbra-labs/qumbra/issues)**
+
+## License
+
+Documents and released artifacts in this repository are dual-licensed under
+[MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE), at your option.
