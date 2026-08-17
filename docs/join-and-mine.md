@@ -122,16 +122,29 @@ Read successive `TELEMETRY` lines, not one isolated sample
 
 ## 3. Turn the joined node into a miner
 
-### 🔴 Hard platform boundary: Linux/glibc only
+### Platform boundary — CORRECTED 2026-08-17 (was: Linux/glibc only)
 
-**Mine on Linux/glibc only until the deterministic-emission boundary is publicly confirmed
-active. Do not mine with a native macOS-built binary.** A macOS miner has been measured to compute
-coinbase values that differ by ±1 bessel from glibc at specific heights. Consensus currently
-accepts those values; that is precisely the defect. Every such block becomes a permanent history
-scar that the activation rule in [lab #299](https://github.com/qumbra-labs/qumbra-lab/issues/299)
-must grandfather. The measurements and mechanism are in
-[lab #303](https://github.com/qumbra-labs/qumbra-lab/issues/303). The digest-pinned Linux image is
-the paved path; a macOS host may run that Linux container, but must not run a native macOS miner.
+> **Dated correction (2026-08-17, lab #437): native macOS mining is PERMITTED.** The original
+> red boundary below was conditioned on the deterministic-emission boundary not yet being
+> active — that boundary activated 2026-08-12 (#299/#303 closed). Above height 8,640,
+> `body.coinbase == coinbase_exact(height)` is a hard consensus rule in pure integer
+> arithmetic; no libm is reachable from consensus, so a native macOS miner can neither
+> compute a divergent coinbase nor scar history. **Verified live, not just argued**: a native
+> macOS arm64 build joined T1 through the public entry points and won 40 accepted, finalized
+> blocks in its first ~100 minutes (lab #437). The container remains the paved, reproducible
+> path; a native build is now a supported alternative.
+>
+> **If you build from source, one flag is load-bearing**: a bare `cargo build -p qumbra-node`
+> produces the ARMED variant, which halts at 8,640 and cannot follow today's chain. Build with
+> `--features qumbra-node/rule-boundary-resume`, and confirm with `qumbra-node check` — its
+> `halt plan:` line must read `no halt scheduled`, not `ARMED`.
+
+The original boundary text, preserved for the record: *Mine on Linux/glibc only until the
+deterministic-emission boundary is publicly confirmed active… A macOS miner has been measured
+to compute coinbase values that differ by ±1 bessel from glibc at specific heights
+([lab #303](https://github.com/qumbra-labs/qumbra-lab/issues/303)); consensus at the time
+accepted those values, and each such block became a permanent scar the activation rule in
+[lab #299](https://github.com/qumbra-labs/qumbra-lab/issues/299) must grandfather.*
 
 Generate the payout identity from the wallet whose address should receive coinbase:
 

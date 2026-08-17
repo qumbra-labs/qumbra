@@ -115,15 +115,25 @@ docker run --rm --name qumbra-node \
 
 ## 3. 把已加入的节点改成矿工
 
-### 🔴 平台硬边界：只能用 Linux/glibc
+### 平台边界——2026-08-17 已更正(原:只能用 Linux/glibc)
 
-**在确定性发行边界被公开确认已激活之前，只能在 Linux/glibc 上挖矿。禁止用 macOS 原生构建的
-二进制挖矿。** 实测 macOS 矿工在特定高度计算出的 coinbase 会与 glibc 相差 ±1 bessel。当前
-共识会接受这些值；问题恰恰就在这里。每一个这样的块都会成为永久历史伤痕，
-[lab #299](https://github.com/qumbra-labs/qumbra-lab/issues/299) 的激活规则以后必须把它列入
-grandfather。测量与机制见 [lab #303](https://github.com/qumbra-labs/qumbra-lab/issues/303)。
-digest 锁定的 Linux 镜像是铺好的路径；macOS 主机可以运行这个 Linux 容器，但不能运行原生
-macOS 矿工。
+> **带日期更正(2026-08-17,lab #437):原生 macOS 挖矿已获准许。** 下方原红字边界的条件
+> 是"确定性发行边界尚未激活"——该边界已于 2026-08-12 激活(#299/#303 已关)。高度 8,640
+> 之上,`body.coinbase == coinbase_exact(height)` 是纯整数运算的硬共识规则,共识路径碰不到
+> libm,原生 macOS 矿工既算不出偏差 coinbase,也造不成历史伤痕。**已实测验证,不止是论证**:
+> 一个原生 macOS arm64 构建经公开入口加入 T1,同步后最初 ~100 分钟赢下 40 个被接受并
+> finalize 的块(lab #437)。容器仍是铺好的可复现路径;原生构建现在是受支持的替代路径。
+>
+> **从源码构建时有一个 flag 性命攸关**:裸 `cargo build -p qumbra-node` 产出 ARMED 变体,
+> 会在 8,640 停机、无法跟上今天的链。必须带
+> `--features qumbra-node/rule-boundary-resume` 构建,并用 `qumbra-node check` 确认——
+> `halt plan:` 行必须是 `no halt scheduled`,不能是 `ARMED`。
+
+原边界文字存档:*在确定性发行边界被公开确认已激活之前,只能在 Linux/glibc 上挖矿……实测
+macOS 矿工在特定高度计算出的 coinbase 会与 glibc 相差 ±1 bessel
+([lab #303](https://github.com/qumbra-labs/qumbra-lab/issues/303));当时的共识接受这些值,
+每个这样的块都成为 [lab #299](https://github.com/qumbra-labs/qumbra-lab/issues/299) 激活
+规则必须 grandfather 的永久伤痕。*
 
 从应接收 coinbase 的钱包派生付款身份：
 
