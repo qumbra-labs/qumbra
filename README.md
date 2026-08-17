@@ -7,10 +7,10 @@ production permissionless while a finality committee checkpoints the chain.
 
 ## 🚀 T1 public testnet — mining is open
 
-> ⚠️ **Running a node already? Update before ~Aug 21.** Binaries/images published before
-> the upcoming name-service release (incl. `t1-91bdee4`) silently stop following the chain
-> at height 19,008. Details in the [announcement](docs/t1-announcement.md); watch
-> [Releases](https://github.com/qumbra-labs/qumbra/releases).
+> ⚠️ **Running a node already? Update to
+> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8) before
+> ~Aug 21.** Anything older (incl. `t1-91bdee4`) silently stops following the chain at
+> height 19,008. Details in the [announcement](docs/t1-announcement.md).
 
 **[Read the announcement →](docs/t1-announcement.md)** ([中文](docs/t1-announcement-zh.md))
 

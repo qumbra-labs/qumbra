@@ -20,14 +20,17 @@ This is the T1 path for a participant the project does not control.
 
 > ### ⚠️ UPDATE YOUR NODE BEFORE ~AUG 21 (height 19,008)
 >
-> **Every binary and image published before the upcoming name-service release stops
+> **Every binary and image older than release
+> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8) stops
 > following the chain at height 19,008** (~the morning of 2026-08-21 +08; the height is
 > exact, the date is an estimate). This includes release `t1-91bdee4` and all node images
 > published before it. The failure is **silent**: an old node keeps running, keeps mining,
 > and walks onto a dead fork with no finality — no error is printed at the boundary.
-> Watch the [Releases page](https://github.com/qumbra-labs/qumbra/releases); the moment the
-> name-service release appears, update and restart. This notice will name the release when
-> it lands. The chain's terms (fee table, activation height, commit–reveal) are unchanged —
+> **The update is live: release
+> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8)** — update
+> and restart before the boundary. If you skip it, your node starts rejecting honest blocks
+> at 19,009 with errors classified `internal` and walks onto a dead fork — that signature
+> means "update", not "debug". The chain's terms (fee table, activation height, commit–reveal) are unchanged —
 > this is a software update deadline, not a rule change.
 
 ## 1. Obtain and verify the release
