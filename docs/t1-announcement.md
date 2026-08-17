@@ -35,6 +35,26 @@ program and no pool yet (both are deliberate — see the design repo's pool brie
 - `https://explorer.qumbra.org` — chain health (tip, finality, committee, exact supply audit)
 - `https://faucet.qumbra.org` — grants for trying transactions before your coinbase matures
 
+## Name service — activation pre-announced, by design
+
+Qumbra will carry a native name layer: `NAME.qmb` resolving to a payment address, registered
+on-chain. It is **built and merged but inert** — it activates at a **pre-committed height H**,
+to be stamped into this page together with the outreach date (H ≈ outreach-day tip + 2–4
+weeks of chain time, i.e. +16,128 to +32,256 blocks at 1,152/day).
+
+**Why the height is pre-announced:** registration fees are **burned QMB**, and mining is how
+QMB comes into existence — so the activation height is public information from day one, and
+everyone (including you, from your first mined block) gets the same accumulation window
+before anyone can register a single name. There is no insider registration period.
+
+What you can prepare for (shape is final; numbers marked pending are not):
+
+- **Commit–reveal registration**: commit first (window 8 blocks), reveal within 2,304
+  blocks — pre-announcing a height does not enable sniping, the two-step blunts it.
+- **Annual terms**: 365 epochs, plus a 90-epoch renewal grace window.
+- **Fee table by name length** — 1 / 32 / 128 / 512 / 2048 QMB — ⚠️ **pending
+  re-ratification at the height stamp; indicative, not final.**
+
 ## What T1 is, honestly
 
 - **Coins have no value** and will not survive the next re-mint: a re-genesis is already
