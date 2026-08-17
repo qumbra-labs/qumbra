@@ -6,7 +6,6 @@ English: [`join-and-mine.md`](./join-and-mine.md) · **技术细节以英文版�
 > 的开发树——它们记录每个论断在哪里被测试,外部读者点开会 404,待该树公开后恢复。加入
 > 网络所需的一切都不依赖这些链接。
 
-
 这是项目无法控制的参与者进入 T1 的操作路径。
 
 > **数值已于 2026-08-16 作为 T1 公告包填入**(设计文档 `t1-sg-posture-decision`,顺序:
@@ -52,6 +51,51 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
 `expected_genesis_hash` 逐字节校验;`qumbra-node check` 与启动都会拒绝错误文件,被篡改的
 下载无法静默通过。种子列表即下方四个开放入口(`t1-sg-posture-decision`)。
 
+### 备选路径：预编译二进制，不用 Docker（2026-08-17 新增，lab #437）
+
+上面的容器仍然是**可复现的基准路径**，本文编号步骤用的也是它。如果 Docker 本身就是障碍
+而不是答案，同样的两个二进制以 tarball 形式发布在公开仓库的 releases 页：
+
+**<https://github.com/qumbra-labs/qumbra/releases>**
+
+> **在第一个版本被切出来之前，那个页面是空的，容器路径是唯一路径。** 发布流水线已经存在
+> ([`release-binaries.yml`](../.github/workflows/release-binaries.yml))，由人手动触发；
+> 一旦发布，T1 公告会给出对应的 tag。
+
+| tarball | 适用于 |
+|---|---|
+| `…-linux-x86_64-glibc.tar.gz` | Intel/AMD Linux，glibc 2.36+（Debian 12、Ubuntu 22.04+） |
+| `…-linux-aarch64-glibc.tar.gz` | arm64 Linux —— 测试网机队自己跑的就是它 |
+| `…-macos-arm64.tar.gz` | Apple Silicon，macOS 11+ |
+
+每个包内含 `qumbra-node`、`qumbra-wallet` 和一份 `PROVENANCE.txt`。**没有原生 Windows
+构建**——节点有仅限 unix 的依赖；在 WSL2 下，按 Linux 用户的方式使用 Linux x86_64 包即可。
+
+```sh
+# 1 —— 从 release 页下载对应平台的 tarball 与 SHA256SUMS，然后：
+sha256sum -c SHA256SUMS          # macOS：shasum -a 256 -c SHA256SUMS
+tar -xzf qumbra-t1-<shortrev>-<platform>.tar.gz
+cd qumbra-t1-<shortrev>-<platform>
+
+# 2 —— 让二进制自己说明它是什么。下面两行都是承重的：
+./qumbra-node halt-status
+```
+
+```text
+  build rev:    <release notes 中给出的源码 revision>
+  halt plan:    no halt scheduled
+  resumes past: height 8640 (post-halt rules apply above it)
+```
+
+`build rev:` 是一个已下载的二进制证明自己来自哪份源码的方式——tarball 没有镜像标签，
+所以这一行等价于上面容器路径里对 `org.opencontainers.image.revision` 的回读。如果
+`halt plan:` 显示 **ARMED**，那个二进制会在 8,640 停住、无法跟随当前链，不要运行它。CI
+拒绝发布 ARMED 产物，所以 release 页上出现 ARMED 二进制意味着该产物并非它所声称的东西。
+
+**仅 macOS：** 这些二进制未签名、未公证。用浏览器下载会打上隔离属性，Gatekeeper 会拒绝
+运行。请用 `curl` 下载，或显式清除该属性：
+`xattr -d com.apple.quarantine qumbra-node qumbra-wallet`。
+
 ## 2. 作为不挖矿的节点加入
 
 把下载的 `genesis.qmb` 与以下最小 `node.toml` 放在同一目录：
@@ -90,6 +134,32 @@ docker run --rm --name qumbra-node \
 `WrongGenesisHash`，节点拒绝启动
 ([`genesis.rs:528-555`](../crates/qumbra-node/src/genesis.rs#L528-L555))。
 
+### 用预编译二进制做同一件事
+
+配置、genesis、种子完全相同，只有调用方式不同。把 `genesis.qmb` 和 `node.toml` 放在解压出
+的二进制旁边，`data_dir` 与 `genesis_file` 写成普通路径，而不是容器里的 `/data` 和
+`/config`：
+
+```toml
+data_dir = "./qumbra-data"
+listen_addr = "0.0.0.0:9400"
+dial_peers = ["18.202.166.126:9444","18.141.177.109:9444","52.194.224.123:9444","52.5.0.21:9444"]
+genesis_file = "./genesis.qmb"
+expected_genesis_hash = "138e1524ba889bd49644f0eeafafa53533584caa2c0c851330cd27965223addb"
+mining = false
+```
+
+```sh
+curl -fsSL https://seed.qumbra.org/genesis.qmb -o genesis.qmb
+./qumbra-node check --config node.toml     # 同一个预检，退出码 0 并打印 genesis 哈希
+./qumbra-node run   --config node.toml
+```
+
+发布流水线在每个产物被允许上传到 release 页之前，都会针对同一个已发布的 genesis 跑一遍
+上面这个 `check`——所以到你手上的 tarball 已经在它自己的平台上预检通过了。`run` 会写入
+`data_dir`，请在你有权限的目录下运行；本文其余部分——下面的 telemetry 字段、§3 的挖矿、
+§4 的钱包——两条路径读法完全一致。
+
 ### NAT 是声明，不是发现
 
 **设计上接受仅出站参与。** 在 NAT 后你仍可同步、挖矿和交易，但你的地址永远不会被 gossip，
@@ -127,7 +197,8 @@ docker run --rm --name qumbra-node \
 > **从源码构建时有一个 flag 性命攸关**:裸 `cargo build -p qumbra-node` 产出 ARMED 变体,
 > 会在 8,640 停机、无法跟上今天的链。必须带
 > `--features qumbra-node/rule-boundary-resume` 构建,并用 `qumbra-node check` 确认——
-> `halt plan:` 行必须是 `no halt scheduled`,不能是 `ARMED`。
+> `halt plan:` 行必须是 `no halt scheduled`,不能是 `ARMED`。**§1 中发布的 tarball 已经
+> 带着这个 flag 构建**,且 CI 拒绝发布没带的产物,所以只有自己编译时才需要操心这个 flag。
 
 原边界文字存档:*在确定性发行边界被公开确认已激活之前,只能在 Linux/glibc 上挖矿……实测
 macOS 矿工在特定高度计算出的 coinbase 会与 glibc 相差 ±1 bessel

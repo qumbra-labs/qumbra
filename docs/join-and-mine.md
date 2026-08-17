@@ -7,7 +7,6 @@
 > exactly where each claim is tested, but will 404 for outside readers until that tree
 > opens. Nothing you need to join depends on following them.
 
-
 This is the T1 path for a participant the project does not control.
 
 > **Values filled 2026-08-16 as the T1 announcement package** (design
@@ -56,6 +55,54 @@ always byte-verify it against `expected_genesis_hash` above; `qumbra-node check`
 both refuse a wrong file, so a tampered download cannot pass silently. The seed list is the
 four open entry points below (`t1-sg-posture-decision`).
 
+### Alternative: prebuilt binaries, no Docker (added 2026-08-17, lab #437)
+
+The container above stays the **reproducible baseline** and is what this guide's numbered
+steps use. If Docker is the obstacle rather than the answer, the same two binaries are
+published as tarballs on the public repo's releases page:
+
+**<https://github.com/qumbra-labs/qumbra/releases>**
+
+> **Until the first release is cut, that page is empty and the container path is the only
+> path.** The release lane exists ([`release-binaries.yml`](../.github/workflows/release-binaries.yml))
+> and is dispatched by hand; the T1 announcement names the tag once one is published.
+
+| tarball | for |
+|---|---|
+| `…-linux-x86_64-glibc.tar.gz` | Intel/AMD Linux, glibc 2.36+ (Debian 12, Ubuntu 22.04+) |
+| `…-linux-aarch64-glibc.tar.gz` | arm64 Linux — what the testnet fleet itself runs |
+| `…-macos-arm64.tar.gz` | Apple Silicon, macOS 11+ |
+
+Each holds `qumbra-node`, `qumbra-wallet` and a `PROVENANCE.txt`. **There is no native
+Windows build** — the node has unix-only dependencies; under WSL2, use the Linux x86_64
+tarball exactly as a Linux user would.
+
+```sh
+# 1 — download the tarball for your platform and SHA256SUMS from the release page, then:
+sha256sum -c SHA256SUMS          # macOS: shasum -a 256 -c SHA256SUMS
+tar -xzf qumbra-t1-<shortrev>-<platform>.tar.gz
+cd qumbra-t1-<shortrev>-<platform>
+
+# 2 — ask the binary what it is. Both lines are load-bearing:
+./qumbra-node halt-status
+```
+
+```text
+  build rev:    <the source revision the release notes name>
+  halt plan:    no halt scheduled
+  resumes past: height 8640 (post-halt rules apply above it)
+```
+
+`build rev:` is how a downloaded binary proves which source it came from — a tarball carries
+no image label, so this line is the equivalent of the `org.opencontainers.image.revision`
+readback in the container path above. If `halt plan:` says **ARMED**, that binary halts at
+8,640 and cannot follow this chain; do not run it. CI refuses to publish one, so an ARMED
+binary from the release page would mean the artifact is not what it claims to be.
+
+**macOS only:** the binaries are unsigned and un-notarized. A browser download quarantines
+them and Gatekeeper refuses to run them. Fetch with `curl`, or clear the attribute:
+`xattr -d com.apple.quarantine qumbra-node qumbra-wallet`.
+
 ## 2. Join as a non-mining node
 
 Put the downloaded `genesis.qmb` beside this minimal `node.toml`:
@@ -94,6 +141,33 @@ docker run --rm --name qumbra-node \
 ([`run.rs:226-242`](../crates/qumbra-node/src/run.rs#L226-L242)). A different file hash produces
 `WrongGenesisHash` and the node refuses to start
 ([`genesis.rs:528-555`](../crates/qumbra-node/src/genesis.rs#L528-L555)).
+
+### The same joiner from the prebuilt binaries
+
+Identical config, identical genesis, identical seeds — only the invocation differs. Put
+`genesis.qmb` and a `node.toml` beside the extracted binaries, with `data_dir` and
+`genesis_file` as ordinary paths rather than the container's `/data` and `/config`:
+
+```toml
+data_dir = "./qumbra-data"
+listen_addr = "0.0.0.0:9400"
+dial_peers = ["18.202.166.126:9444","18.141.177.109:9444","52.194.224.123:9444","52.5.0.21:9444"]
+genesis_file = "./genesis.qmb"
+expected_genesis_hash = "138e1524ba889bd49644f0eeafafa53533584caa2c0c851330cd27965223addb"
+mining = false
+```
+
+```sh
+curl -fsSL https://seed.qumbra.org/genesis.qmb -o genesis.qmb
+./qumbra-node check --config node.toml     # same preflight, exits 0 and prints the genesis hash
+./qumbra-node run   --config node.toml
+```
+
+The release lane runs exactly that `check`, against exactly that published genesis, on every
+artifact before it is allowed onto the release page — so a tarball that reaches you has
+already preflighted clean on its own platform. `run` writes into `data_dir`, so run it from a
+directory you own; everything else in this guide — the telemetry fields below, mining in §3,
+the wallet in §4 — reads the same either way.
 
 ### NAT is stated, not discovered
 
@@ -137,7 +211,9 @@ Read successive `TELEMETRY` lines, not one isolated sample
 > **If you build from source, one flag is load-bearing**: a bare `cargo build -p qumbra-node`
 > produces the ARMED variant, which halts at 8,640 and cannot follow today's chain. Build with
 > `--features qumbra-node/rule-boundary-resume`, and confirm with `qumbra-node check` — its
-> `halt plan:` line must read `no halt scheduled`, not `ARMED`.
+> `halt plan:` line must read `no halt scheduled`, not `ARMED`. **The published tarballs in §1
+> are already built with that flag** and CI refuses to publish one that is not, so the flag is
+> a concern only if you compile it yourself.
 
 The original boundary text, preserved for the record: *Mine on Linux/glibc only until the
 deterministic-emission boundary is publicly confirmed active… A macOS miner has been measured
