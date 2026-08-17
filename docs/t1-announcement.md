@@ -35,6 +35,18 @@ program and no pool yet (both are deliberate — see the design repo's pool brie
 - `https://explorer.qumbra.org` — chain health (tip, finality, committee, exact supply audit)
 - `https://faucet.qumbra.org` — grants for trying transactions before your coinbase matures
 
+> ### ⚠️ UPDATE YOUR NODE BEFORE ~AUG 21 (height 19,008)
+>
+> **Every binary and image published before the upcoming name-service release stops
+> following the chain at height 19,008** (~the morning of 2026-08-21 +08; the height is
+> exact, the date is an estimate). This includes release `t1-91bdee4` and all node images
+> published before it. The failure is **silent**: an old node keeps running, keeps mining,
+> and walks onto a dead fork with no finality — no error is printed at the boundary.
+> Watch the [Releases page](https://github.com/qumbra-labs/qumbra/releases); the moment the
+> name-service release appears, update and restart. This notice will name the release when
+> it lands. The chain's terms (fee table, activation height, commit–reveal) are unchanged —
+> this is a software update deadline, not a rule change.
+
 ## Name service — activation pre-announced, by design
 
 Qumbra will carry a native name layer: `NAME.qmb` resolving to a payment address, registered

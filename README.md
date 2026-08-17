@@ -7,6 +7,11 @@ production permissionless while a finality committee checkpoints the chain.
 
 ## 🚀 T1 public testnet — mining is open
 
+> ⚠️ **Running a node already? Update before ~Aug 21.** Binaries/images published before
+> the upcoming name-service release (incl. `t1-91bdee4`) silently stop following the chain
+> at height 19,008. Details in the [announcement](docs/t1-announcement.md); watch
+> [Releases](https://github.com/qumbra-labs/qumbra/releases).
+
 **[Read the announcement →](docs/t1-announcement.md)** ([中文](docs/t1-announcement-zh.md))
 
 Anyone can run a node and mine. No registration, no permission — a CPU is enough.
