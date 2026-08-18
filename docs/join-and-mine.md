@@ -27,7 +27,7 @@ This is the T1 path for a participant the project does not control.
 > published before it. The failure is **silent**: an old node keeps running, keeps mining,
 > and walks onto a dead fork with no finality — no error is printed at the boundary.
 > **The update is live: release
-> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8)** — update
+> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8) or later — latest is [`t1-84f6f4c`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-84f6f4c) (adds native Windows + one-command `mine`)** — update
 > and restart before the boundary. If you skip it, your node starts rejecting honest blocks
 > at 19,009 with errors classified `internal` and walks onto a dead fork — that signature
 > means "update", not "debug". The chain's terms (fee table, activation height, commit–reveal) are unchanged —

@@ -23,7 +23,7 @@ English: [`join-and-mine.md`](./join-and-mine.md) · **技术细节以英文版�
 > (约 2026-08-21 早间 +08;高度精确,日期为估计)。这包括 release `t1-91bdee4` 及此前的
 > 全部节点镜像。故障是**静默的**:旧节点照常运行、照常挖矿,却走上一条没有 finality 的
 > 死叉——边界处不打印任何错误。**更新已就绪:release
-> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8)**——边界前
+> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8) 或更新——最新为 [`t1-84f6f4c`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-84f6f4c)(新增原生 Windows + 一键 `mine`)**——边界前
 > 更新并重启。若不更新,你的节点将在 19,009 起以 `internal` 类错误拒绝所有诚实区块并走上
 > 死叉——那个签名的含义是"该更新了",不是"该调试了"。链的条款(费用表、激活高度、
 > commit–reveal)不变——这是软件更新期限,不是规则变更。
