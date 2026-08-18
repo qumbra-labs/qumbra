@@ -109,6 +109,19 @@ cd qumbra-t1-<shortrev>-<platform>
 运行。请用 `curl` 下载，或显式清除该属性：
 `xattr -d com.apple.quarantine qumbra-node qumbra-wallet`。
 
+### Windows:用 WSL2(原生支持开发中)
+
+目前没有原生 Windows 二进制。**WSL2 是当下受支持的路径**,挖矿速度几乎无损(挖矿是纯
+CPU 活;WSL2 的开销在 IO):
+
+1. 管理员 PowerShell:`wsl --install`,然后重启(装的是 Ubuntu,glibc ≥ 2.36,达标)。
+2. 打开 Ubuntu 终端,从本文 §1 开始照走,用 `linux-x86_64-glibc` 那个 tarball;下文
+   所有步骤原样适用。
+3. 笔记本插电,并把 Windows 电源设置改为不休眠——睡着的主机不挖矿。
+
+原生 Windows 支持已派工跟踪;落地后 Releases 页会多一个 `windows-x86_64` 产物,本节
+缩成一行。
+
 ## 2. 作为不挖矿的节点加入
 
 把下载的 `genesis.qmb` 与以下最小 `node.toml` 放在同一目录：

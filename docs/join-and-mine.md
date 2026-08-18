@@ -118,6 +118,20 @@ binary from the release page would mean the artifact is not what it claims to be
 them and Gatekeeper refuses to run them. Fetch with `curl`, or clear the attribute:
 `xattr -d com.apple.quarantine qumbra-node qumbra-wallet`.
 
+### Windows: use WSL2 (native support is in progress)
+
+There is no native Windows binary yet. **WSL2 is the supported path today**, and it mines at
+effectively native speed (mining is pure CPU; WSL2's overhead lives in IO):
+
+1. Admin PowerShell: `wsl --install`, then reboot (installs Ubuntu, glibc ≥ 2.36 — fine).
+2. Inside the Ubuntu terminal, follow this document from §1 using the
+   `linux-x86_64-glibc` tarball. Everything below applies unchanged.
+3. Keep the laptop plugged in and set Windows power settings not to sleep — a sleeping
+   host mines nothing.
+
+Native Windows support is dispatched and tracked; when it lands, the release page gains a
+`windows-x86_64` artifact and this section shrinks to one line.
+
 ## 2. Join as a non-mining node
 
 Put the downloaded `genesis.qmb` beside this minimal `node.toml`:
