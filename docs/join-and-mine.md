@@ -1,50 +1,184 @@
-# Join and mine on the Qumbra testnet
+# Join and mine on Qumbra T2
 
 中文：[`join-and-mine-zh.md`](./join-and-mine-zh.md) · **English is authoritative on technical detail.**
 
 > **Note for readers of this public mirror:** inline code links (`../crates/…`,
-> `../deploy/…`) reference the development tree, which is private during T1 — they document
-> exactly where each claim is tested, but will 404 for outside readers until that tree
-> opens. Nothing you need to join depends on following them.
+> `../deploy/…`) reference the development tree, which stays private on its own
+> schedule — they document exactly where each claim is tested, but will 404 for
+> outside readers until that tree opens. Nothing you need to join depends on
+> following them.
 
-This is the T1 path for a participant the project does not control.
+This is the T2 path for a participant the project does not control. There are **two ways
+to mine**, and you only need one of them:
 
-> **Values filled 2026-08-16 as the T1 announcement package** (design
-> `t1-sg-posture-decision`, sequence: Gate A remeasure → this package → SG open). They are
-> read from the deployed fleet, not guessed: image digest/revision from the compose pin and
-> its OCI label readback, seeds from the four OPEN entry points of the SG posture decision
-> (node0 is deliberately not an entry point). **Until the announcement is published (Larry's
-> go), the port these seeds listen on is not yet publicly open** — a connection refused before
-> that moment is the posture working, not a wrong address. If the fleet rolls between this
-> fill and the announcement, the digest/revision rows are re-verified at publication.
+| path | what you run | what you need |
+|---|---|---|
+| **Pool** (§1) | stock [XMRig](https://github.com/xmrig/xmrig) pointed at `pool.qumbra.org:3333` | a payout key from `qumbra-wallet` — **no node, no genesis file, no sync** |
+| **Solo** (§2) | your own full node, `qumbra-node mine` | the node binary + the T2 genesis file |
 
-> ### ⚠️ UPDATE YOUR NODE BEFORE ~AUG 21 (height 19,008)
+Pool mining smooths variance and takes minutes to set up; solo mining keeps the whole
+block reward when you win one and makes you a full validator of the chain. The wallet
+(§4) is the same either way.
+
+> ### ⚠️ T1 IS RETIRED — this guide is for T2
 >
-> **Every binary and image older than release
-> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8) stops
-> following the chain at height 19,008** (~the morning of 2026-08-21 +08; the height is
-> exact, the date is an estimate). This includes release `t1-91bdee4` and all node images
-> published before it. The failure is **silent**: an old node keeps running, keeps mining,
-> and walks onto a dead fork with no finality — no error is printed at the boundary.
-> **The update is live: release
-> [`t1-c5cfff8`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-c5cfff8) or later — latest is [`t1-84f6f4c`](https://github.com/qumbra-labs/qumbra/releases/tag/t1-84f6f4c) (adds native Windows + one-command `mine`)** — update
-> and restart before the boundary. If you skip it, your node starts rejecting honest blocks
-> at 19,009 with errors classified `internal` and walks onto a dead fork — that signature
-> means "update", not "debug". The chain's terms (fee table, activation height, commit–reveal) are unchanged —
-> this is a software update deadline, not a rule change.
+> **T1 has shut down.** If you were following the previous version of this guide: stop —
+> its values are dead. T1 balances **do not carry over**; T2 is a fair relaunch from a
+> fresh genesis — no premine, no carry, block 0 is the same starting line for everyone,
+> including the operators. Anything you have that names the T1 genesis hash
+> (`138e1524…addb`), a `t1-*` release tag, or the height-19,008 update deadline belongs
+> to the retired net and does not apply here. T2 is a **different network by
+> construction**: its genesis file is format **v5**, network `qumbra-t2`
+> ([`genesis.rs:630-636`](../crates/qumbra-node/src/genesis.rs#L630-L636)), a node
+> pinned to the wrong genesis refuses to start, and a wrong-net peer is refused by name
+> at the P2P handshake ([`peer.rs:45-47`](../crates/qlab-p2p/src/peer.rs#L45-L47),
+> lab #474) — you cannot join the wrong chain by accident, only fail loudly.
 
-## 1. Obtain and verify the release
+> **What is true at cutover, and what is not.** The genesis hash below is the real
+> T2 value — pin it, verify it, trust nothing else. Two things this guide does
+> **not** claim are live at 14:00 UTC+8:
+>
+> 1. **T2 binaries / image digest.** The T2 release is cut *after* the cutover (the
+>    release guard refuses a T2 tag before the chain is live). Until a T2 tag
+>    appears on <https://github.com/qumbra-labs/qumbra/releases>, there is no T2
+>    binary to run. Every `t1-*` tag is a T1 artifact — do not run it against T2.
+> 2. **The pool endpoint.** `pool.qumbra.org:3333` is the path (stock XMRig config
+>    in §1). The pool is held until after cutover: a live-looking stratum that
+>    issued jobs against a fake template would burn miners' hashpower, so the
+>    hostname is **not** a paying endpoint until a later note on this repo says
+>    it is. The config is here so it is one paste when that happens.
+>
+> Image digest, image revision, P2P seeds, and the T2 release tag remain written
+> as `<… — filled at announcement>` until those values exist. A genesis hash from
+> anywhere other than this page or the T2 announcement, including an older copy
+> of this file, is wrong by definition.
 
-The node image is public at `ghcr.io/qumbra-labs/qumbra-node`. Use the **digest from the T1
-announcement**, never a mutable tag. The image records its source revision in the OCI label
-`org.opencontainers.image.revision`; read it back and compare it with the revision in the
-announcement rather than trusting the tag or a successful pull. The label and node binary are
-part of the runtime image ([`deploy/docker/Dockerfile:123-160`](../deploy/docker/Dockerfile#L123-L160));
-the readback requirement is the lesson of [lab #224](https://github.com/qumbra-labs/qumbra-lab/issues/224).
+## 1. Pool path — stock XMRig, no node
+
+> **Held until after cutover.** The config in this section is the path, not a
+> live claim. Do not point a miner at `pool.qumbra.org:3333` expecting payment
+> until the T2 announcement (or a follow-up on this repo) says the pool is up.
+
+New to mining pools? **Stratum** is the JSON-line protocol miners and pools use
+over one long-lived TCP connection (login → jobs → share submits). Qumbra speaks
+the Monero-family dialect that stock XMRig already knows — that is the whole
+point of the T2 header layout. The short version: not one line changes on the
+miner side.
+
+The short version: Qumbra's pool speaks the Monero-family stratum dialect that stock
+XMRig already knows, and the T2 block header was laid out so that **not one line changes
+on the miner side**. The pool is custody-free: it never holds your coins — a won block's
+coinbase pays miners directly on-chain
+([`payee.rs`](../crates/qumbra-pool/src/payee.rs)).
+
+### 1.1 Make a payout key
+
+Your payout identity is a 64-hex-character key derived from a wallet you control. Get
+`qumbra-wallet` from the release archive in §2.1 (any platform; you do **not** need to
+run the node), then:
 
 ```sh
-IMAGE='ghcr.io/qumbra-labs/qumbra-node@sha256:c7b8b3340d35d7461daaa83acea6a8eef045bdba74d5173f9f059322ec18adbb'
-EXPECTED_REV='e0b624596e29dc8a95d1f6715ed061b4247a73e2'
+# 1 — create the wallet (prints address [0])
+qumbra-wallet keygen --dir "$HOME/.qumbra-wallet"
+
+# 2 — back up the mnemonic in a private terminal, NOW — it is shown, not stored readable
+qumbra-wallet backup --dir "$HOME/.qumbra-wallet" --reveal
+
+# 3 — derive the payout key the pool pays
+qumbra-wallet miner-rkm --dir "$HOME/.qumbra-wallet"
+```
+
+Step 3 prints a `miner_rkm = "…"` line whose value is **exactly 64 hex characters**
+([`qumbra-wallet/main.rs:476-495`](../crates/qumbra-wallet/src/main.rs#L476-L495)).
+That value — the bare hex, without the `miner_rkm = ""` wrapper — is what goes in
+XMRig's `user` field.
+
+**Copy it exactly.** The pool credits precisely the key you log in with: a 64-hex login
+*is* the payout key ([`payee.rs:45-62`](../crates/qumbra-pool/src/payee.rs#L45-L62)).
+A mistyped or truncated login still mines and still scores shares, but it **can never be
+paid** — the pool has no way to know who you meant. There is no account recovery,
+because there are no accounts.
+
+### 1.2 Point XMRig at the pool
+
+Download stock XMRig from its official releases page
+(<https://github.com/xmrig/xmrig/releases> — Windows, macOS, Linux). Expect your
+antivirus or SmartScreen to flag it: it is a CPU miner, and flagging CPU miners is what
+reputation filters do. Verify the download against XMRig's published hashes, then
+decide.
+
+Minimal `config.json`:
+
+```json
+{
+    "pools": [
+        {
+            "url": "pool.qumbra.org:3333",
+            "user": "<the 64 hex characters printed by qumbra-wallet miner-rkm>",
+            "pass": "x",
+            "algo": "rx/0",
+            "keepalive": true,
+            "tls": false
+        }
+    ]
+}
+```
+
+Or the same thing as a command line:
+
+```sh
+xmrig -o pool.qumbra.org:3333 -a rx/0 -k \
+      -u <the 64 hex characters printed by qumbra-wallet miner-rkm> -p x
+```
+
+`algo` must be `rx/0` — the pool refuses anything else by name
+([`pool.rs:248`](../crates/qumbra-pool/src/pool.rs#L248)). `pass` is free-form and
+unused. **When the pool is announced live**, healthy output is XMRig printing
+`new job from pool.qumbra.org:3333` followed by a steady drip of `accepted` share
+lines; a run with jobs but zero accepted shares after several minutes means
+something is wrong — recheck `algo` first. Until that announcement, a connection
+refused (or jobs that never become chain blocks) is the hold working, not a
+wrong address.
+
+### 1.3 How you get paid — read this before extrapolating earnings
+
+- The pool tallies shares over a **PPLNS window: the last 1,024 accepted shares,
+  weighted by difficulty**
+  ([`pplns.rs:1-10`](../crates/qumbra-pool/src/pplns.rs#L1-L10); the window size is a
+  devnet-placeholder constant and may be retuned).
+- **At launch, each won block pays ONE miner** — the v5 coinbase payee list is capped at
+  **N=1 at birth**
+  ([`body.rs:94`](../crates/qlab-devnet/src/body.rs#L94)), so the whole miner reward of
+  a block goes to the highest-weight payable miner in the window at that moment
+  ([`payee.rs:107-131`](../crates/qumbra-pool/src/payee.rs#L107-L131)). Over many
+  blocks this pays proportionally to shares; over a short window it behaves like a
+  shares-weighted lottery. If your hashrate is a small fraction of the pool's, expect
+  the same dry spells solo miners see, shortened in proportion to how often the pool
+  wins blocks. Raising the cap (true per-block splitting) is a planned, declared rule
+  change, not a knob the pool can turn.
+- Payment is **on-chain coinbase**, so pool payouts obey coinbase maturity: spendable
+  after **144 more blocks**, about three hours at target
+  ([`emission.rs:83`](../crates/qlab-node/src/emission.rs#L83)).
+- Your earnings are visible to your wallet, not on a pool dashboard: `miner-rkm` derives
+  from your wallet's address index 0, so the §4 `scan` command shows what the pool has
+  paid you, with no one to trust about it.
+
+## 2. Solo path — run a node and mine
+
+### 2.1 Obtain and verify the release
+
+The node image is public at `ghcr.io/qumbra-labs/qumbra-node`. Use the **digest from the
+T2 announcement**, never a mutable tag. The image records its source revision in the OCI
+label `org.opencontainers.image.revision`; read it back and compare it with the revision
+in the announcement rather than trusting the tag or a successful pull. The label and
+node binary are part of the runtime image
+([`deploy/docker/Dockerfile:144`](../deploy/docker/Dockerfile#L144)); the readback
+requirement is the lesson of
+[lab #224](https://github.com/qumbra-labs/qumbra-lab/issues/224).
+
+```sh
+IMAGE='ghcr.io/qumbra-labs/qumbra-node@<T2_IMAGE_DIGEST — filled at announcement>'
+EXPECTED_REV='<T2_IMAGE_REVISION — filled at announcement>'
 
 docker pull "$IMAGE"
 ACTUAL_REV="$(docker image inspect \
@@ -57,98 +191,127 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
 
 The announcement also publishes these network-identity inputs together:
 
-- `genesis.qmb` — **format v4**;
-- `expected_genesis_hash` —
-  `138e1524ba889bd49644f0eeafafa53533584caa2c0c851330cd27965223addb`;
-- the initial P2P seed addresses for `dial_peers`.
+- `genesis.qmb` — **format v5, network `qumbra-t2`**
+  ([`genesis.rs:630-636`](../crates/qumbra-node/src/genesis.rs#L630-L636));
+- `expected_genesis_hash` — `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3`;
+- the initial P2P seed addresses for `dial_peers` — `<T2_SEEDS — filled at announcement>`.
 
-The format and hash are pinned in the tree
-([`genesis.rs:68-77`](../crates/qumbra-node/src/genesis.rs#L68-L77),
-[`genesis.rs:775-779`](../crates/qumbra-node/src/genesis.rs#L775-L779)). Distribution:
-`genesis.qmb` downloads from **`https://seed.qumbra.org/genesis.qmb`** (deploy PR #150) —
-always byte-verify it against `expected_genesis_hash` above; `qumbra-node check` and startup
-both refuse a wrong file, so a tampered download cannot pass silently. The seed list is the
-four open entry points below (`t1-sg-posture-decision`).
+Distribution: `genesis.qmb` downloads from **`https://seed.qumbra.org/genesis.qmb`**
+(the bare service names moved from T1 to T2 at cutover; `pool.qumbra.org` is new and
+held — see the box above) — always byte-verify it against `expected_genesis_hash`
+above. `qumbra-node check` and startup both refuse a wrong file
+([`genesis.rs:525-530`](../crates/qumbra-node/src/genesis.rs#L525-L530)), so a tampered
+download cannot pass silently. Until the cutover completes, that URL may still
+serve T1's file or refuse — byte-verify against the T2 hash; a mismatch is the
+cutover in progress, not a reason to ignore the hash.
 
-### Alternative: prebuilt binaries, no Docker (added 2026-08-17, lab #437)
+#### Prebuilt binaries, no Docker
 
-The container above stays the **reproducible baseline** and is what this guide's numbered
-steps use. If Docker is the obstacle rather than the answer, the same two binaries are
-published as tarballs on the public repo's releases page:
+The container above stays the **reproducible baseline**. If Docker is the obstacle
+rather than the answer, the same three binaries (`qumbra-node`, `qumbra-wallet`,
+`qumbra-pool`, plus a `PROVENANCE.txt`) land as archives on the public repo's
+releases page —
+**<https://github.com/qumbra-labs/qumbra/releases>**, tag
+`<T2_RELEASE_TAG — filled at announcement>` — **after the cutover**. That tag does
+not exist yet; the release guard refuses to cut it before the chain is live.
+Every currently published tag (`t1-91bdee4`, `t1-c5cfff8`, `t1-84f6f4c`) is a T1
+artifact. Do not run a `t1-*` binary against T2.
 
-**<https://github.com/qumbra-labs/qumbra/releases>**
-
-> **Until the first release is cut, that page is empty and the container path is the only
-> path.** The release lane exists ([`release-binaries.yml`](../.github/workflows/release-binaries.yml))
-> and is dispatched by hand; the T1 announcement names the tag once one is published.
-
-| tarball | for |
+| archive | for |
 |---|---|
 | `…-linux-x86_64-glibc.tar.gz` | Intel/AMD Linux, glibc 2.36+ (Debian 12, Ubuntu 22.04+) |
-| `…-linux-aarch64-glibc.tar.gz` | arm64 Linux — what the testnet fleet itself runs |
+| `…-linux-aarch64-glibc.tar.gz` | arm64 Linux — what the fleet itself runs |
 | `…-macos-arm64.tar.gz` | Apple Silicon, macOS 11+ |
-
-Each holds `qumbra-node`, `qumbra-wallet` and a `PROVENANCE.txt`. **There is no native
-Windows build** — the node has unix-only dependencies; under WSL2, use the Linux x86_64
-tarball exactly as a Linux user would.
+| `…-windows-x86_64.zip` | Windows 10/11 x64 — native, no WSL2 |
 
 ```sh
-# 1 — download the tarball for your platform and SHA256SUMS from the release page, then:
+# 1 — download the archive for your platform and SHA256SUMS from the release page, then:
 sha256sum -c SHA256SUMS          # macOS: shasum -a 256 -c SHA256SUMS
-tar -xzf qumbra-t1-<shortrev>-<platform>.tar.gz
-cd qumbra-t1-<shortrev>-<platform>
+tar -xzf qumbra-<T2_RELEASE_TAG>-<platform>.tar.gz
+cd qumbra-<T2_RELEASE_TAG>-<platform>
 
-# 2 — ask the binary what it is. Both lines are load-bearing:
+# 2 — ask the binary what it is:
 ./qumbra-node halt-status
 ```
 
-```text
-  build rev:    <the source revision the release notes name>
-  halt plan:    no halt scheduled
-  resumes past: height 8640 (post-halt rules apply above it)
+`build rev:` in that output is how a downloaded binary proves which source it came from —
+a tarball carries no image label, so this line is the equivalent of the
+`org.opencontainers.image.revision` readback in the container path above. It must match
+the revision the release notes name. `halt plan:` must read `no halt scheduled`; if it
+says **ARMED**, that binary is scheduled to stop following the chain at a fixed height —
+do not run it, and treat its presence on the release page as evidence the artifact is
+not what it claims to be (CI refuses to publish one).
+
+**macOS only:** the binaries are unsigned and un-notarized. A browser download
+quarantines them and Gatekeeper refuses to run them. Fetch with `curl`, or clear the
+attribute: `xattr -d com.apple.quarantine qumbra-node qumbra-wallet qumbra-pool`.
+
+**If you build from source, one flag is load-bearing**: a bare
+`cargo build -p qumbra-node` produces the ARMED variant — a T1-upgrade artifact whose
+scheduled halt still fires on any net, T2 included
+([`release.rs:712-714`](../crates/qumbra-node/src/release.rs#L712-L714)). Build with
+`--features qumbra-node/rule-boundary-resume` and confirm with `qumbra-node halt-status`:
+`halt plan:` must read `no halt scheduled`, not `ARMED`. The published archives are
+already built with that flag.
+
+### 2.2 One command: `qumbra-node mine`
+
+Everything in §2.3 — a wallet, its backup, the payout key, a hand-written `node.toml`,
+the genesis download and verification — is what `qumbra-node mine` does for you. It is
+the same node with the same config; the difference is that the five steps are one:
+
+```sh
+./qumbra-node mine --dir ~/.qumbra-miner
 ```
 
-`build rev:` is how a downloaded binary proves which source it came from — a tarball carries
-no image label, so this line is the equivalent of the `org.opencontainers.image.revision`
-readback in the container path above. If `halt plan:` says **ARMED**, that binary halts at
-8,640 and cannot follow this chain; do not run it. CI refuses to publish one, so an ARMED
-binary from the release page would mean the artifact is not what it claims to be.
+On a terminal, with no wallet in that directory, it generates one, prints its mnemonic
+**once** behind a red banner, and **waits for you to press Enter** before it goes any
+further. Write the phrase down at that moment: it is not stored anywhere you can read
+back, and every coin this node mines is paid to it.
 
-**macOS only:** the binaries are unsigned and un-notarized. A browser download quarantines
-them and Gatekeeper refuses to run them. Fetch with `curl`, or clear the attribute:
-`xattr -d com.apple.quarantine qumbra-node qumbra-wallet`.
+Then it downloads `genesis.qmb` (only if the directory does not already have one),
+verifies it against the genesis hash this binary was built with **before anything binds
+a socket**, writes an ordinary `node.toml` into the directory, and runs it. Nothing is
+hidden: read `~/.qumbra-miner/node.toml` afterwards and it is the same file §2.3 tells
+you to write by hand. **Use the T2 release binary from §2.1** — `mine`'s baked-in
+defaults (seeds, genesis URL, expected genesis hash) belong to the release you run, and
+only a T2 release carries T2's
+([`mine.rs:61-83`](../crates/qumbra-node/src/mine.rs#L61-L83)).
 
-### Windows: use WSL2 (native support is in progress)
+| flag | for |
+|---|---|
+| `--yes-i-backed-up` | the confirmation, for a run with no terminal (a systemd unit, a container). **Without a terminal and without this flag, `mine` refuses to create a wallet** rather than creating one silently — capture the mnemonic from the command's output yourself. |
+| `--rkm <64 hex>` | pay a key you already have. No wallet is read, created, or looked for; this is the manual path of §2.3, unchanged. |
+| `--seeds`, `--genesis-url`, `--listen`, `--index` | override the baked defaults. A non-zero `--index` is **allocated** in the wallet as part of the run, so what this node mines stays inside what `scan` covers; it is capped at 1024, and a higher index is served by `qumbra-wallet address --new` plus `--rkm`. |
 
-There is no native Windows binary yet. **WSL2 is the supported path today**, and it mines at
-effectively native speed (mining is pure CPU; WSL2's overhead lives in IO):
+The wallet lands in `~/.qumbra-miner/wallet`, so every wallet command in §4 works
+against it — `qumbra-wallet backup --dir ~/.qumbra-miner/wallet --reveal` shows the
+phrase again, and `scan` reads what this node has mined. Re-running `mine` on a prepared
+directory changes nothing and just starts the node; if you have edited `node.toml` by
+hand it refuses rather than overwriting your edit, and tells you to use `run --config`
+instead.
 
-1. Admin PowerShell: `wsl --install`, then reboot (installs Ubuntu, glibc ≥ 2.36 — fine).
-2. Inside the Ubuntu terminal, follow this document from §1 using the
-   `linux-x86_64-glibc` tarball. Everything below applies unchanged.
-3. Keep the laptop plugged in and set Windows power settings not to sleep — a sleeping
-   host mines nothing.
+On Windows this is `.\qumbra-node.exe mine --dir $HOME\.qumbra-miner` in PowerShell, and
+it is the shortest native path there is — it writes the `node.toml` itself, so the TOML
+backslash trap in §3 cannot bite you.
 
-Native Windows support is dispatched and tracked; when it lands, the release page gains a
-`windows-x86_64` artifact and this section shrinks to one line.
-
-## 2. Join as a non-mining node
+### 2.3 The manual path — join as a node, then turn on mining
 
 Put the downloaded `genesis.qmb` beside this minimal `node.toml`:
 
 ```toml
 data_dir = "/data"
 listen_addr = "0.0.0.0:9400"
-dial_peers = ["18.202.166.126:9444","18.141.177.109:9444","52.194.224.123:9444","52.5.0.21:9444"]
+dial_peers = ["<T2_SEEDS — filled at announcement>"]
 genesis_file = "/config/genesis.qmb"
-expected_genesis_hash = "138e1524ba889bd49644f0eeafafa53533584caa2c0c851330cd27965223addb"
+expected_genesis_hash = "d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3"
 mining = false
 ```
 
-These are the fields a joiner needs. `mining` defaults to false, but it is explicit above. Do
-**not** copy fleet configs and do **not** add `committee_key_paths`: a public joiner is a
-verify-only node and holds no committee signing keys
-([`config.rs:54-94`](../crates/qumbra-node/src/config.rs#L54-L94)).
+These are the fields a joiner needs. `mining` defaults to false, but it is explicit
+above. Do **not** copy fleet configs and do **not** add `committee_key_paths`: a public
+joiner is a verify-only node and holds no committee signing keys
+([`config.rs:86`](../crates/qumbra-node/src/config.rs#L86)).
 
 Preflight the exact genesis and config before binding a socket, then run:
 
@@ -167,24 +330,12 @@ docker run --rm --name qumbra-node \
 ```
 
 `check` exercises the same byte/format/hash gate as startup without opening a listener
-([`run.rs:226-242`](../crates/qumbra-node/src/run.rs#L226-L242)). A different file hash produces
-`WrongGenesisHash` and the node refuses to start
-([`genesis.rs:528-555`](../crates/qumbra-node/src/genesis.rs#L528-L555)).
+([`main.rs:596`](../crates/qumbra-node/src/main.rs#L596)). A different file hash
+produces `WrongGenesisHash` and the node refuses to start
+([`genesis.rs:796`](../crates/qumbra-node/src/genesis.rs#L796)).
 
-### The same joiner from the prebuilt binaries
-
-Identical config, identical genesis, identical seeds — only the invocation differs. Put
-`genesis.qmb` and a `node.toml` beside the extracted binaries, with `data_dir` and
-`genesis_file` as ordinary paths rather than the container's `/data` and `/config`:
-
-```toml
-data_dir = "./qumbra-data"
-listen_addr = "0.0.0.0:9400"
-dial_peers = ["18.202.166.126:9444","18.141.177.109:9444","52.194.224.123:9444","52.5.0.21:9444"]
-genesis_file = "./genesis.qmb"
-expected_genesis_hash = "138e1524ba889bd49644f0eeafafa53533584caa2c0c851330cd27965223addb"
-mining = false
-```
+From the prebuilt binaries, the same joiner is: identical config with ordinary paths
+(`data_dir = "./qumbra-data"`, `genesis_file = "./genesis.qmb"`), then
 
 ```sh
 curl -fsSL https://seed.qumbra.org/genesis.qmb -o genesis.qmb
@@ -192,75 +343,32 @@ curl -fsSL https://seed.qumbra.org/genesis.qmb -o genesis.qmb
 ./qumbra-node run   --config node.toml
 ```
 
-The release lane runs exactly that `check`, against exactly that published genesis, on every
-artifact before it is allowed onto the release page — so a tarball that reaches you has
-already preflighted clean on its own platform. `run` writes into `data_dir`, so run it from a
-directory you own; everything else in this guide — the telemetry fields below, mining in §3,
-the wallet in §4 — reads the same either way.
+`run` writes into `data_dir`, so run it from a directory you own.
 
-### NAT is stated, not discovered
+**NAT is stated, not discovered.** Outbound-only participation is accepted by design:
+behind NAT you sync, mine, and transact, but your address is never gossiped and you
+serve no peers. Leave `advertise_addr` unset. Set it **only** when the advertised host
+and port are genuinely publicly dialable all the way to this node; for the container
+that also means publishing the P2P port, for example `-p 9400:9400/tcp`
+([`config.rs:61-78`](../crates/qumbra-node/src/config.rs#L61-L78),
+[`run.rs:821-826`](../crates/qumbra-node/src/run.rs#L821-L826)).
 
-**Outbound-only participation is accepted by design.** Behind NAT you sync, mine, and transact,
-but your address is never gossiped and you serve no peers. Leave `advertise_addr` unset. Set it
-**only** when the advertised host and port are genuinely publicly dialable all the way to this
-node; for the container that also means publishing the P2P port, for example `-p 9400:9400/tcp`.
-This behavior is the recorded 2026-07-26 NAT decision, not a workaround
-([`config.rs:68-78`](../crates/qumbra-node/src/config.rs#L68-L78),
-[`run.rs:588-595`](../crates/qumbra-node/src/run.rs#L588-L595)).
+**What healthy joining looks like** — read successive `TELEMETRY` lines, not one
+isolated sample:
 
-### What healthy joining looks like
+- `peers=N` is the live peer count: `N > 0` means at least one connection is live;
+  persistent `peers=0` means the node has not joined a peer.
+- `slag=N` is fork-choice tip minus applied-state tip: it should fall toward `0` while
+  joining; `slag=0` means the node has applied its own selected chain
+  ([`run.rs:1292-1308`](../crates/qumbra-node/src/run.rs#L1292-L1308)).
+- `mready=-` is correct for the non-mining config above. After mining is enabled,
+  `unknown` or `behind` means the startup mining gate is correctly refusing; `synced` or
+  `latched` permits mining. It does **not** prove `slag=0`
+  ([`run.rs:1327-1343`](../crates/qumbra-node/src/run.rs#L1327-L1343)).
 
-Read successive `TELEMETRY` lines, not one isolated sample
-([`run.rs:1342-1371`](../crates/qumbra-node/src/run.rs#L1342-L1371)):
-
-- `peers=N` is the live peer count: `N > 0` means at least one connection is live; persistent
-  `peers=0` means the node has not joined a peer.
-- `slag=N` is fork-choice tip minus applied-state tip: it should fall toward `0` while joining;
-  `slag=0` means the node has applied its own selected chain
-  ([`run.rs:1017-1034`](../crates/qumbra-node/src/run.rs#L1017-L1034)).
-- `mready=-` is correct for the non-mining config above. After mining is enabled, `unknown` or
-  `behind` means the startup mining gate is correctly refusing; `synced` or `latched` permits
-  mining. It does **not** prove `slag=0`
-  ([`run.rs:376-421`](../crates/qumbra-node/src/run.rs#L376-L421)).
-
-## 3. Turn the joined node into a miner
-
-### Platform boundary — CORRECTED 2026-08-17 (was: Linux/glibc only)
-
-> **Dated correction (2026-08-17, lab #437): native macOS mining is PERMITTED.** The original
-> red boundary below was conditioned on the deterministic-emission boundary not yet being
-> active — that boundary activated 2026-08-12 (#299/#303 closed). Above height 8,640,
-> `body.coinbase == coinbase_exact(height)` is a hard consensus rule in pure integer
-> arithmetic; no libm is reachable from consensus, so a native macOS miner can neither
-> compute a divergent coinbase nor scar history. **Verified live, not just argued**: a native
-> macOS arm64 build joined T1 through the public entry points and won 40 accepted, finalized
-> blocks in its first ~100 minutes (lab #437). The container remains the paved, reproducible
-> path; a native build is now a supported alternative.
->
-> **If you build from source, one flag is load-bearing**: a bare `cargo build -p qumbra-node`
-> produces the ARMED variant, which halts at 8,640 and cannot follow today's chain. Build with
-> `--features qumbra-node/rule-boundary-resume`, and confirm with `qumbra-node check` — its
-> `halt plan:` line must read `no halt scheduled`, not `ARMED`. **The published tarballs in §1
-> are already built with that flag** and CI refuses to publish one that is not, so the flag is
-> a concern only if you compile it yourself.
-
-The original boundary text, preserved for the record: *Mine on Linux/glibc only until the
-deterministic-emission boundary is publicly confirmed active… A macOS miner has been measured
-to compute coinbase values that differ by ±1 bessel from glibc at specific heights
-([lab #303](https://github.com/qumbra-labs/qumbra-lab/issues/303)); consensus at the time
-accepted those values, and each such block became a permanent scar the activation rule in
-[lab #299](https://github.com/qumbra-labs/qumbra-lab/issues/299) must grandfather.*
-
-Generate the payout identity from the wallet whose address should receive coinbase:
-
-```sh
-qumbra-wallet miner-rkm --dir "$HOME/.qumbra-wallet"
-```
-
-The command derives the allocated address index (index 0 by default) and prints the exact
-64-hex-character `miner_rkm = "…"` line expected by the node
-([`qumbra-wallet/main.rs:147-175`](../crates/qumbra-wallet/src/main.rs#L147-L175)). Paste it into
-`node.toml` and change only these mining fields:
+**Then turn on mining.** Generate the payout identity from the wallet whose address
+should receive coinbase (§1.1 steps 1–3, or reuse the same wallet), and change only
+these fields in `node.toml`:
 
 ```toml
 mining = true
@@ -273,48 +381,168 @@ On startup, prove the config took effect by finding this exact line:
 miner payout: coinbase notes paid to the configured miner_rkm
 ```
 
-If you instead see the following warning, stop mining and fix the config: valid blocks are being
-paid to an unspendable placeholder and the payout is unrecoverable
-([`run.rs:596-612`](../crates/qumbra-node/src/run.rs#L596-L612)).
+If you instead see the following warning, stop mining and fix the config: valid blocks
+are being paid to an unspendable placeholder and the payout is unrecoverable
+([`run.rs:838-840`](../crates/qumbra-node/src/run.rs#L838-L840)).
 
 ```text
 ⚠️  NO miner_rkm CONFIGURED: ... Every coin this node mines is BURNED.
 ```
 
+### 2.4 Reward, maturity, pacing, and odds
+
+- A won block pays your key **65% of the block subsidy (including the integer rounding
+  remainder) plus all transaction fees**, minus any name-registration fees that block
+  burned ([`emission.rs:85-87`](../crates/qlab-node/src/emission.rs#L85-L87),
+  [`coinbase.rs:172-185`](../crates/qlab-node/src/coinbase.rs#L172-L185)). On T2 the
+  coinbase is a v5 payee list; a solo miner is simply its only entry.
+- Emission is **integer-exact from block 0** — no floating point is reachable from
+  consensus, so the schedule is reproducible by anyone, to the unit. (T1 earned this
+  rule at a mid-chain boundary and carries one scarred block; T2 is born with it.)
+- The coinbase becomes spendable after **144 more blocks**. That is about three hours at
+  target, not a wall-clock promise
+  ([`emission.rs:83`](../crates/qlab-node/src/emission.rs#L83)).
+- The network target is **75 seconds per block**, retargeted every block with
+  **LWMA-120**; the deployable binary uses real RandomX
+  ([`params_devnet.rs:16-42`](../crates/qlab-devnet/src/params_devnet.rs#L16-L42),
+  [`pow.rs`](../crates/qlab-devnet/src/pow.rs)).
+- Solo mining is not one reward every 75 seconds. Your expected share is your effective
+  RandomX work divided by all effective work currently competing. The public surface
+  exposes current difficulty, not fleet hash rate, so this guide cannot honestly quote
+  personal odds. Expect variance and potentially long dry spells — the pool path exists
+  precisely to smooth this.
+
 ### 🔴 The unresolved first-start silence
 
-A node with `miner_rkm` configured has been observed once to spend **about 57 minutes at silent
-100% CPU before its first log line** on first start. This is unresolved
-([lab #300](https://github.com/qumbra-labs/qumbra-lab/issues/300)). It is not necessarily hung:
-if the process is alive and a core is pegged while no log line appears, leave it running. A
-restart does not fix the path and only discards the work already spent; wait for the first line.
+A node with `miner_rkm` configured has been observed once to spend **about 57 minutes at
+silent 100% CPU before its first log line** on first start (observed on T1; the code
+path is unchanged and unresolved —
+[lab #300](https://github.com/qumbra-labs/qumbra-lab/issues/300)). It is not necessarily
+hung: if the process is alive and a core is pegged while no log line appears, leave it
+running. A restart does not fix the path and only discards the work already spent; wait
+for the first line.
 
-### Reward, maturity, pacing, and odds
+## 3. Platform notes — Windows and macOS
 
-- A won block pays the wallet **65% of the block subsidy (including the integer rounding
-  remainder) plus all transaction fees**
-  ([`emission.rs:27-30`](../crates/qlab-node/src/emission.rs#L27-L30),
-  [`coinbase.rs:133-139`](../crates/qlab-node/src/coinbase.rs#L133-L139)).
-- The coinbase becomes spendable after **144 more blocks**. That is about three hours at target,
-  not a wall-clock promise
-  ([`emission.rs:47-55`](../crates/qlab-node/src/emission.rs#L47-L55)).
-- The network target is **75 seconds per block**, retargeted every block with **LWMA-120**; the
-  deployable binary uses real RandomX, not the Keccak simulation placeholder
-  ([`params_devnet.rs:16-49`](../crates/qlab-devnet/src/params_devnet.rs#L16-L49),
-  [`pow.rs:66-100`](../crates/qlab-devnet/src/pow.rs#L66-L100)).
-- This is solo mining, not a pool and not one reward every 75 seconds. Your expected share is your
-  effective RandomX work divided by all effective work currently competing. The public surface
-  exposes current difficulty, not fleet hash rate, so this guide cannot honestly quote personal
-  odds. Expect variance and potentially long dry spells.
+Solo mining works natively on Linux, macOS, and Windows; the pool path (§1) is
+platform-trivial since XMRig ships official builds everywhere. What follows is only what
+is *different* about Windows and macOS for the solo path.
+
+**Why native mining is safe on T2, in one line:** T2's emission rule is exact integer
+arithmetic from block 0 — no platform's math library is reachable from consensus, so no
+platform can compute a divergent coinbase. (This was a genuine T1-era hazard, retired
+there at a mid-chain boundary; on T2 the class is structurally excluded from birth.)
+
+### Windows: native
+
+`windows-x86_64.zip` holds `qumbra-node.exe` and `qumbra-wallet.exe`, built for
+`x86_64-pc-windows-msvc` with the same RandomX C++ implementation every other platform
+uses. CI runs RandomX's four official reference vectors on the MSVC build, so a Windows
+miner's hashes are the network's hashes, not a near-miss.
+
+Everything in §2 applies unchanged — same `genesis.qmb`, same `node.toml` fields, same
+seeds. The differences:
+
+**1. Download and verify, in PowerShell.** Windows has no `sha256sum`:
+
+```powershell
+# from the release page: the zip for your platform, and SHA256SUMS
+Get-FileHash .\qumbra-<T2_RELEASE_TAG>-windows-x86_64.zip -Algorithm SHA256
+# compare the printed hash against the matching line in SHA256SUMS — by eye, all 64 chars
+Expand-Archive .\qumbra-<T2_RELEASE_TAG>-windows-x86_64.zip -DestinationPath .
+cd qumbra-<T2_RELEASE_TAG>-windows-x86_64
+.\qumbra-node.exe halt-status
+```
+
+The `halt-status` reading is the same one §2.1 describes: `build rev:` must match the
+release notes, and `halt plan:` must say `no halt scheduled` and not **ARMED**.
+
+**2. 🔴 SmartScreen will stop you, and it is right to.** These executables are
+**unsigned** — there is no code-signing certificate on this project, and buying one is a
+separate decision nobody has taken. The first run of either binary shows *"Windows
+protected your PC"*. The path through it is **More info → Run anyway**. Microsoft
+Defender may additionally flag a CPU miner on reputation alone.
+
+This is the honest position and not a reassurance: an unsigned binary from a small
+project is exactly the shape of thing SmartScreen exists to warn about, and *"click
+through the security warning"* is advice you should be suspicious of by default. The
+only thing that makes it reasonable here is that you can check the download yourself —
+**verify the SHA-256 against SHA256SUMS before you click Run anyway**, not after.
+
+**3. Paths in `node.toml` need single quotes.** TOML's double-quoted strings treat `\`
+as an escape character, so `data_dir = "C:\Users\you\qumbra-data"` is either a parse
+error or a different directory than you meant. Use a TOML *literal* string, or forward
+slashes:
+
+```toml
+data_dir = 'C:\Users\you\qumbra-data'          # literal string — backslashes are literal
+genesis_file = 'C:\Users\you\genesis.qmb'
+# or, equally valid on Windows:
+# data_dir = "C:/Users/you/qumbra-data"
+```
+
+(`qumbra-node mine` writes its own `node.toml`, so this trap only exists on the manual
+path.)
+
+**4. Run it from a console you opened, and stop it with Ctrl-C.** Open PowerShell or
+Windows Terminal and run `.\qumbra-node.exe run --config node.toml` there — do not
+double-click it. **Ctrl-C is the stop that reliably flushes the snapshot.** Closing the
+console window flushes too, but Windows gives any program about five seconds after a
+window-close before killing it, and a node busy inside a RandomX round can miss that
+budget.
+
+Nothing is lost when it does: the block log is fsync'd per record and is the source of
+truth, so a node that missed its snapshot flush replays the log on next start and
+reaches exactly the same state. What a missed flush costs is **replay time**, not coins
+or history.
+
+**5. The wallet's seed file is not owner-only on Windows.** On Linux and macOS
+`qumbra-wallet keygen` writes `wallet.seed` with mode `0600`. Windows has no such mode
+and this build does not set an ACL, so the file inherits whatever the folder gives it —
+under your own profile that is normally you *plus* SYSTEM and Administrators. `keygen`
+prints this rather than claiming a protection it does not have. To make the wallet
+folder owner-only, run once:
+
+```powershell
+icacls "$env:USERPROFILE\.qumbra-wallet" /inheritance:r /grant:r "${env:USERNAME}:(OI)(CI)F"
+```
+
+Anyone who can read that file owns every coin the wallet holds.
+
+**6. Keep the machine awake.** Set Windows power settings not to sleep, and keep a
+laptop plugged in — a sleeping host mines nothing. (This applies to the pool path too.)
+
+**Not in this port** (named so nobody looks for it): no Windows service wrapper — to
+survive sign-out, register the `run` command as a Task Scheduler task with *"Run whether
+user is logged on or not"*, which is outside what this guide covers. No code signing. No
+ARM Windows build.
+
+### Windows: WSL2
+
+Still supported: `wsl --install` from an admin PowerShell, then follow §2 inside Ubuntu
+with the `linux-x86_64-glibc` tarball. It mines at effectively native speed. With a
+native build available, WSL2 is the fallback rather than the path.
+
+### macOS
+
+Apple Silicon is supported natively (`macos-arm64.tar.gz`). Two things to know: the
+quarantine/Gatekeeper note in §2.1 (fetch with `curl` or clear the attribute), and — as
+everywhere — keep the machine awake and plugged in while mining.
 
 ## 4. Wallet quickstart — five commands
 
 The CLI's own help is the authority for flags and units
-([`qumbra-wallet/main.rs:43-66`](../crates/qumbra-wallet/src/main.rs#L43-L66)). These five commands
-cover the shortest user journey; replace `RECIPIENT_QADDR` and keep in mind that `--amount` is in
-**bessel** (`100,000,000` bessel = `1 QMB`;
-[`emission.rs:34-35`](../crates/qlab-node/src/emission.rs#L34-L35)).
-Command 3 uses `curl` and `jq`; `qumbra-wallet --help` gives the full command reference.
+([`qumbra-wallet/main.rs:270-290`](../crates/qumbra-wallet/src/main.rs#L270-L290)).
+These five commands cover the shortest user journey; replace `RECIPIENT_QADDR` and keep
+in mind that `--amount` is in **bessel** (`100,000,000` bessel = `1 QMB`;
+[`emission.rs:69`](../crates/qlab-node/src/emission.rs#L69)). On T2 there is no
+pre-funded shortcut: **coins come from mining** — either path in this guide — and become
+spendable 144 blocks after the block that paid them.
+
+**On Windows**, the same five commands run in PowerShell with `.\qumbra-wallet.exe` in
+place of `qumbra-wallet`; `$HOME` and `$env:USERPROFILE` both work for `--dir`.
+Command 3 needs a PowerShell equivalent, since `jq` is not present by default:
+`$TIP = (Invoke-RestMethod https://explorer.qumbra.org/v1/health.json).chain.tip_height`.
 
 ```sh
 # 1 — create the wallet; this prints address [0]
@@ -323,7 +551,7 @@ qumbra-wallet keygen --dir "$HOME/.qumbra-wallet"
 # 2 — back up the Qumbra mnemonic in a private terminal
 qumbra-wallet backup --dir "$HOME/.qumbra-wallet" --reveal
 
-# Paste the full address [0] into https://faucet.qumbra.org and wait for its grant.
+# (mine to this wallet — §1 pool or §2 solo — and wait out the 144-block maturity)
 
 # 3 — obtain the height against which the balance claim will be made
 TIP="$(curl -fsS https://explorer.qumbra.org/v1/health.json | jq -r '.chain.tip_height')"
@@ -338,32 +566,8 @@ qumbra-wallet send --dir "$HOME/.qumbra-wallet" \
   --to RECIPIENT_QADDR --amount 100000000
 ```
 
-HTTP **429 Too Many Requests is expected behavior for the current faucet limit**; do not hammer
-the form. [Lab #308](https://github.com/qumbra-labs/qumbra-lab/issues/308) records that the
-network-keyed bucket is currently seen through the reverse proxy as a shared bucket, so another
-visitor may have consumed it. Retry after the stated window while that issue remains open.
-
-## 5. Verification record for the image claim
-
-This is evidence that the package path is public and that remote label readback works; it is
-**not** the T1 image announcement. On 2026-08-10, without pulling or registry credentials:
-
-```text
-$ docker buildx imagetools inspect ghcr.io/qumbra-labs/qumbra-node:t0-wan-14
-Name:   ghcr.io/qumbra-labs/qumbra-node:t0-wan-14
-Digest: sha256:931afa0fe57844f52e5bbb390914ec3116a72c3ff04781b11d8a080dcc4c2f29
-
-$ docker buildx imagetools inspect --format \
-  '{{index .Image.Config.Labels "org.opencontainers.image.revision"}}' \
-  ghcr.io/qumbra-labs/qumbra-node@sha256:931afa0fe57844f52e5bbb390914ec3116a72c3ff04781b11d8a080dcc4c2f29
-e8d52d7b194d3560f70de5d1f26b99b6f37bdd2e
-```
-
-Do not substitute that historical T0 digest for the bracketed T1 digest in §1.
-
-The §4 public reads were also checked on 2026-08-10: `GET
-https://explorer.qumbra.org/v1/health.json` returned the pinned genesis hash and a numeric
-`chain.tip_height`, while `GET https://seed.qumbra.org/v1/compact?from=6313&to=6313` returned
-HTTP 200 with `application/octet-stream`. The JSON field is defined at
-[`qumbra-explorer/json.rs:55-80`](../crates/qumbra-explorer/src/json.rs#L55-L80); the height
-`6313` is only the one-sample probe height, not a network parameter.
+The explorer at <https://explorer.qumbra.org> shows the chain the wallet is claiming
+against — its `/v1/health.json` carries the chain's served `network` field
+([`qumbra-explorer/main.rs:113`](../crates/qumbra-explorer/src/main.rs#L113)), which on
+T2 reads `qumbra-t2`; if it reads anything else, you are looking at the wrong net's
+explorer.
