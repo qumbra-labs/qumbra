@@ -24,7 +24,7 @@ Two join paths:
 | path | what you run | status at cutover |
 |---|---|---|
 | **Pool** | stock [XMRig](https://github.com/xmrig/xmrig) at `pool.qumbra.org:3333` | path documented; **held** until a later note says it is live |
-| **Solo** | `qumbra-node mine` with the T2 genesis | T2 binaries land on [Releases](https://github.com/qumbra-labs/qumbra/releases) **after** cutover; do not run a `t1-*` tag against T2 |
+| **Solo** | `qumbra-node mine` with the T2 genesis | **T2 binaries are published: [`t2-644a129`](https://github.com/qumbra-labs/qumbra/releases/tag/t2-644a129)** (linux x86_64/aarch64, macOS arm64, Windows) — verify against `SHA256SUMS`; do not run a `t1-*` tag against T2 |
 
 **Pin this genesis hash and trust nothing else:**
 
