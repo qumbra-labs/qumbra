@@ -2,6 +2,12 @@
 
 English: [`t1-announcement.md`](./t1-announcement.md) · **技术细节以英文版为准。**
 
+> **已归档。** T1 已于 2026-08-20 14:00 UTC+8（06:00 UTC）退役，由 T2 取代——
+> [`t2-announcement-zh.md`](./t2-announcement-zh.md)，加入指南
+> [`join-and-mine-zh.md`](./join-and-mine-zh.md)。本页作为记录保留，不删除。其中的
+> 数值（创世 `138e1524…addb`、`t1-*` release tag、高度 19,008 名字边界期限）属于已
+> 退役的网络，对 T2 不适用。
+
 > **已发布 2026-08-16。** 若发布后最初几分钟内种子连接被拒,说明门正在开——防火墙变更
 > 紧随本页落地;稍候重试即可。
 

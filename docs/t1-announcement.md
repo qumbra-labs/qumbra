@@ -2,6 +2,12 @@
 
 中文：[`t1-announcement-zh.md`](./t1-announcement-zh.md) · **English is authoritative on technical detail.**
 
+> **ARCHIVED.** T1 retired 2026-08-20 14:00 UTC+8 (06:00 UTC). Superseded by T2 —
+> [`t2-announcement.md`](./t2-announcement.md), join guide
+> [`join-and-mine.md`](./join-and-mine.md). This page is kept as the record, not
+> deleted. Its values (genesis `138e1524…addb`, `t1-*` release tags, the height-19,008
+> name-boundary deadline) belong to the retired net and do not apply to T2.
+
 > **PUBLISHED 2026-08-16.** If a seed connection is refused in the first minutes after
 > publication, the door is mid-open — the firewall change lands right behind this page;
 > retry shortly.
