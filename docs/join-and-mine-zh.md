@@ -169,11 +169,14 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
 - `genesis.qmb`——**格式 v5，网络 `qumbra-t2`**
   （[`genesis.rs:630-636`](../crates/qumbra-node/src/genesis.rs#L630-L636)）；
 - `expected_genesis_hash`——`d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3`；
-- `dial_peers` 的初始 P2P 种子地址——`<T2_SEEDS — filled at announcement>`。
+- `dial_peers` 的初始 P2P 种子地址——`"18.202.166.126:9444", "18.141.177.109:9444", "52.194.224.123:9444", "52.5.0.21:9444"`。
 
 分发：`genesis.qmb` 从 **`https://seed.qumbra.org/genesis.qmb`** 下载（裸服务名在
 切换时从 T1 移交给 T2；`pool.qumbra.org` 是新增且暂缓的——见上方框）——务必对照
-上面的 `expected_genesis_hash` 逐字节校验；`qumbra-node check` 与启动都会拒绝错误
+上面的 `expected_genesis_hash` 用 **`qumbra-node check`** 验证——那是这项检查的可执行形式:
+把哈希填进配置,`check` 会从文件重算创世身份并拒绝不匹配。(**不要**指望文件的 `sha256`
+等于上面那个哈希:钉住的值是对规范编码取的 keccak256,与文件摘要是两个不同的数,
+拿 `shasum` 直接比会看起来像不匹配,而其实一切正常。)`check` 与启动都会拒绝错误
 文件（[`genesis.rs:525-530`](../crates/qumbra-node/src/genesis.rs#L525-L530)），被
 篡改的下载无法静默通过。切换完成前，该 URL 可能仍在提供 T1 文件或拒绝连接——
 对照 T2 哈希校验；对不上说明切换正在进行，不是忽略哈希的理由。
@@ -262,7 +265,7 @@ Windows 上是 PowerShell 里的 `.\qumbra-node.exe mine --dir $HOME\.qumbra-min
 ```toml
 data_dir = "/data"
 listen_addr = "0.0.0.0:9400"
-dial_peers = ["<T2_SEEDS — filled at announcement>"]
+dial_peers = ["18.202.166.126:9444", "18.141.177.109:9444", "52.194.224.123:9444", "52.5.0.21:9444"]
 genesis_file = "/config/genesis.qmb"
 expected_genesis_hash = "d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3"
 mining = false
