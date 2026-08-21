@@ -216,11 +216,25 @@ The container above stays the **reproducible baseline**. If Docker is the obstac
 rather than the answer, the same three binaries (`qumbra-node`, `qumbra-wallet`,
 `qumbra-pool`, plus a `PROVENANCE.txt`) land as archives on the public repo's
 releases page —
-**<https://github.com/qumbra-labs/qumbra/releases>**, tag
-`<T2_RELEASE_TAG — filled at announcement>` — **after the cutover**. That tag does
-not exist yet; the release guard refuses to cut it before the chain is live.
-Every currently published tag (`t1-91bdee4`, `t1-c5cfff8`, `t1-84f6f4c`) is a T1
-artifact. Do not run a `t1-*` binary against T2.
+**<https://github.com/qumbra-labs/qumbra/releases/latest>** — that link always resolves to
+the current release, which is what you want. A tag written into this page goes stale the next
+time we cut one, and this page has already been wrong that way once.
+
+🔴 **Two things make a release the wrong one, and both are checkable before you run it:**
+
+* **Never run a `t1-*` tag against T2.** T1 is retired.
+* **T2 releases earlier than `t2-a89dce6` cannot reopen their own data directory after a
+  restart** ([lab #521](https://github.com/qumbra-labs/qumbra-lab/issues/521) /
+  [#524](https://github.com/qumbra-labs/qumbra-lab/issues/524)). **They start fine and fail the
+  *second* time**, which is the worst shape a defect can have: it works, you trust it, and it
+  breaks on a restart you did not plan. `t2-a89dce6` and newer are fixed. **If you are already
+  running an earlier one, update before something restarts it for you.**
+
+**Ask the binary rather than trusting this page** — it knows which net it was built for:
+
+```sh
+./qumbra-node mine --print-net     # the net it targets, and the genesis hash it pins
+```
 
 | archive | for |
 |---|---|
@@ -232,8 +246,12 @@ artifact. Do not run a `t1-*` binary against T2.
 ```sh
 # 1 — download the archive for your platform and SHA256SUMS from the release page, then:
 sha256sum -c SHA256SUMS          # macOS: shasum -a 256 -c SHA256SUMS
-tar -xzf qumbra-<T2_RELEASE_TAG>-<platform>.tar.gz
-cd qumbra-<T2_RELEASE_TAG>-<platform>
+# TAG — set this ONCE from the releases page; nothing below repeats it.
+TAG=t2-a89dce6                   # or newer; see the two rules above
+PLATFORM=linux-x86_64-glibc      # or linux-aarch64-glibc, macos-arm64, …
+
+tar -xzf "qumbra-$TAG-$PLATFORM.tar.gz"
+cd "qumbra-$TAG-$PLATFORM"
 
 # 2 — ask the binary what it is:
 ./qumbra-node halt-status
@@ -452,10 +470,11 @@ seeds. The differences:
 
 ```powershell
 # from the release page: the zip for your platform, and SHA256SUMS
-Get-FileHash .\qumbra-<T2_RELEASE_TAG>-windows-x86_64.zip -Algorithm SHA256
+$TAG = "t2-a89dce6"   # or newer; set once, nothing below repeats it
+Get-FileHash ".\qumbra-$TAG-windows-x86_64.zip" -Algorithm SHA256
 # compare the printed hash against the matching line in SHA256SUMS — by eye, all 64 chars
-Expand-Archive .\qumbra-<T2_RELEASE_TAG>-windows-x86_64.zip -DestinationPath .
-cd qumbra-<T2_RELEASE_TAG>-windows-x86_64
+Expand-Archive ".\qumbra-$TAG-windows-x86_64.zip" -DestinationPath .
+cd "qumbra-$TAG-windows-x86_64"
 .\qumbra-node.exe halt-status
 ```
 
