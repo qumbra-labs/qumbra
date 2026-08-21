@@ -566,6 +566,14 @@ spendable 144 blocks after the block that paid them.
 **On Windows**, the same five commands run in PowerShell with `.\qumbra-wallet.exe` in
 place of `qumbra-wallet`; `$HOME` and `$env:USERPROFILE` both work for `--dir`.
 Command 3 needs a PowerShell equivalent, since `jq` is not present by default:
+🔴 **`--net t2` is not optional and its absence is silent until you try to spend.**
+The flag's default is **`t1`**, the retired net. A wallet that scans coin **mined on T2**
+without it reconstructs each coinbase note under the wrong genesis form: same value,
+different commitment, so the note is in no tree. **The balance still looks right** — it is
+computed from the same wrong derivation — and the failure only appears at the moment you
+send, as `a spendable note's commitment is not in the supplied tree`. **Coin received from
+someone else is unaffected; this is specific to coin you mined yourself.**
+
 `$TIP = (Invoke-RestMethod https://explorer.qumbra.org/v1/health.json).chain.tip_height`.
 
 ```sh
@@ -581,11 +589,11 @@ qumbra-wallet backup --dir "$HOME/.qumbra-wallet" --reveal
 TIP="$(curl -fsS https://explorer.qumbra.org/v1/health.json | jq -r '.chain.tip_height')"
 
 # 4 — discover outputs and subtract spent notes through the public node edge
-qumbra-wallet scan --dir "$HOME/.qumbra-wallet" \
+qumbra-wallet scan --dir "$HOME/.qumbra-wallet" --net t2 \
   --url https://seed.qumbra.org --to "$TIP"
 
 # 5 — rescan, build a real proof, and submit; --node defaults to --url if omitted
-qumbra-wallet send --dir "$HOME/.qumbra-wallet" \
+qumbra-wallet send --dir "$HOME/.qumbra-wallet" --net t2 \
   --url https://seed.qumbra.org --scan-to "$TIP" \
   --to RECIPIENT_QADDR --amount 100000000
 ```
