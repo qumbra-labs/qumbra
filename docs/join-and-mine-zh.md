@@ -499,6 +499,13 @@ flag 与单位以 CLI 自己的帮助为权威
 **Windows 上**，同样五条命令在 PowerShell 里运行，把 `qumbra-wallet` 换成
 `.\qumbra-wallet.exe`；`--dir` 用 `$HOME` 或 `$env:USERPROFILE` 都行。命令 3 需要
 PowerShell 等价形式，因为默认没有 `jq`：
+🔴 **`--net t2` 不是可选项,而且漏了它在你尝试花钱之前不会有任何征兆。**
+这个标志的默认值是 **`t1`**,已退役的那张网。一个钱包在扫描**你自己在 T2 上挖到的**币时
+如果漏了它,会用错误的创世 form 重建每一张 coinbase 票据:**同样的金额,不同的承诺**,
+于是那张票据不在任何树里。**余额看起来仍然是对的**,而失败只在你按下发送的那一刻才出现:
+`a spendable note's commitment is not in the supplied tree`。**别人转给你的币不受影响,
+这只发生在你自己挖到的币上。**
+
 `$TIP = (Invoke-RestMethod https://explorer.qumbra.org/v1/health.json).chain.tip_height`。
 
 ```sh
@@ -514,11 +521,11 @@ qumbra-wallet backup --dir "$HOME/.qumbra-wallet" --reveal
 TIP="$(curl -fsS https://explorer.qumbra.org/v1/health.json | jq -r '.chain.tip_height')"
 
 # 4 —— 经公共节点边缘发现产出并扣除已花费的 note
-qumbra-wallet scan --dir "$HOME/.qumbra-wallet" \
+qumbra-wallet scan --dir "$HOME/.qumbra-wallet" --net t2 \
   --url https://seed.qumbra.org --to "$TIP"
 
 # 5 —— 重扫、构建真实证明并提交；省略 --node 时默认取 --url
-qumbra-wallet send --dir "$HOME/.qumbra-wallet" \
+qumbra-wallet send --dir "$HOME/.qumbra-wallet" --net t2 \
   --url https://seed.qumbra.org --scan-to "$TIP" \
   --to RECIPIENT_QADDR --amount 100000000
 ```
