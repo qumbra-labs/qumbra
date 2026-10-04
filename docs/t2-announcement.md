@@ -5,9 +5,9 @@
 > 🔴 **Update 2026-10-03: T2 was re-launched from genesis
 > `59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1`.** The genesis hash in the
 > table below (`d1dad4ea…e2f3`) is the 2026-08-20 launch value, kept here as the record; it
-> is retired. No public release pins the new genesis yet: every release up to and including
-> `t2-2026.08.25-1` pins `d1dad4ea…e2f3` and cannot join the re-launched T2. A release for
-> `59d9f054` is pending. Current values: [`join-and-mine.md`](./join-and-mine.md).
+> is retired. Release `t2-2026.10.04-1` is the first that pins the new genesis; every release
+> up to and including `t2-2026.08.24-1` pins `d1dad4ea…e2f3` and cannot join the re-launched
+> T2. Current values: [`join-and-mine.md`](./join-and-mine.md).
 
 > **T2 is live as of 2026-08-20 14:00 UTC+8 (06:00 UTC).** T1 is retired. This note
 > is the long version of the announcement: what the new net is, what happened to
