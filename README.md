@@ -46,7 +46,7 @@ never happens here).
 |---|---|
 | chain health | https://explorer.qumbra.org |
 | wallet / discovery edge | https://seed.qumbra.org |
-| genesis file | https://seed.qumbra.org/genesis.qmb — byte-verify against the hash above |
+| genesis file | https://seed.qumbra.org/genesis.qmb — keccak-256 of the file's bytes must equal the hash above (not SHA-256 or SHA3-256; `qumbra-node check` does it for you) |
 | pool (stock XMRig) | `pool.qumbra.org:3333` — held until announced live |
 
 The T1 faucet is retired with T1. Coins on T2 come from mining.
