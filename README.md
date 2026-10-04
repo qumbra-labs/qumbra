@@ -24,11 +24,16 @@ Two join paths:
 | path | what you run | status at cutover |
 |---|---|---|
 | **Pool** | stock [XMRig](https://github.com/xmrig/xmrig) at `pool.qumbra.org:3333` | path documented; **held** until a later note says it is live |
-| **Solo** | `qumbra-node mine` with the T2 genesis | **T2 binaries: [the latest release](https://github.com/qumbra-labs/qumbra/releases/latest)** (linux x86_64/aarch64, macOS arm64, Windows) — verify against `SHA256SUMS`. 🔴 **Use `t2-a89dce6` or newer**: earlier T2 builds cannot reopen their own data directory after a restart ([#521](https://github.com/qumbra-labs/qumbra-lab/issues/521)) — they start fine and fail the *second* time. Never run a `t1-*` tag against T2 |
+| **Solo** | `qumbra-node mine` with the T2 genesis | **T2 binaries: [the latest release](https://github.com/qumbra-labs/qumbra/releases/latest)** (linux x86_64/aarch64, macOS arm64, Windows) — verify against `SHA256SUMS`. 🔴 **Use `t2-a89dce6` or newer**: earlier T2 builds cannot reopen their own data directory after a restart ([#521](https://github.com/qumbra-labs/qumbra-lab/issues/521)) — they start fine and fail the *second* time. Never run a `t1-*` tag against T2. 🔴 **No public release pins the re-launched genesis yet** — see below |
 
 **Pin this genesis hash and trust nothing else:**
 
-`d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3`
+`59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1`
+
+🔴 **T2 was re-launched on 2026-10-03 from genesis `59d9f054…44b1`; `d1dad4ea…e2f3` is
+retired. No public release pins the new genesis yet.** Every release up to and including
+`t2-2026.08.25-1` is built from a revision that pins `d1dad4ea…e2f3`, so it cannot join
+the re-launched T2. A release for `59d9f054` is pending.
 
 Network name `qumbra-t2`. Names are native from block 0 (the T1 height-19,008 boundary
 never happens here).

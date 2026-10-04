@@ -2,6 +2,13 @@
 
 中文：[`t2-announcement-zh.md`](./t2-announcement-zh.md) · **English is authoritative on technical detail.**
 
+> 🔴 **Update 2026-10-03: T2 was re-launched from genesis
+> `59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1`.** The genesis hash in the
+> table below (`d1dad4ea…e2f3`) is the 2026-08-20 launch value, kept here as the record; it
+> is retired. No public release pins the new genesis yet: every release up to and including
+> `t2-2026.08.25-1` pins `d1dad4ea…e2f3` and cannot join the re-launched T2. A release for
+> `59d9f054` is pending. Current values: [`join-and-mine.md`](./join-and-mine.md).
+
 > **T2 is live as of 2026-08-20 14:00 UTC+8 (06:00 UTC).** T1 is retired. This note
 > is the long version of the announcement: what the new net is, what happened to
 > the old one, and how to join. Step-by-step: [`join-and-mine.md`](./join-and-mine.md).
@@ -58,7 +65,7 @@ Pin this value and trust nothing else:
 |---|---|
 | network | `qumbra-t2` |
 | genesis format | v5 |
-| `expected_genesis_hash` | `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3` |
+| `expected_genesis_hash` | `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3` — **retired 2026-10-03**, see the update above |
 | genesis file (after cutover) | `https://seed.qumbra.org/genesis.qmb` — byte-verify against the hash |
 | T2 binaries | land on <https://github.com/qumbra-labs/qumbra/releases> **after** cutover |
 | pool (stock XMRig) | `pool.qumbra.org:3333` — path documented, **held** until announced live |

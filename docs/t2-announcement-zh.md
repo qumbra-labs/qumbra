@@ -2,6 +2,12 @@
 
 English: [`t2-announcement.md`](./t2-announcement.md) · **技术细节以英文版为准。**
 
+> 🔴 **2026-10-03 更新:T2 已从创世
+> `59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1` 重启。** 下表里的创世哈希
+> (`d1dad4ea…e2f3`)是 2026-08-20 上线时的值，作为记录保留，已经退役。目前还没有公开版本
+> 支持新创世:`t2-2026.08.25-1` 及之前的所有版本钉的都是 `d1dad4ea…e2f3`,连不上重启后的
+> T2。支持 `59d9f054` 的版本还没发布。当前的值见 [`join-and-mine-zh.md`](./join-and-mine-zh.md)。
+
 > **T2 已于 2026-08-20 14:00 UTC+8（06:00 UTC）上线。** T1 已退役。这是公告的长版本：
 > 新网是什么、旧网怎么了、如何加入。逐步操作见
 > [`join-and-mine-zh.md`](./join-and-mine-zh.md)。T1 公告作为记录保留，不删除：
@@ -47,7 +53,7 @@ English: [`t2-announcement.md`](./t2-announcement.md) · **技术细节以英文
 |---|---|
 | 网络名 | `qumbra-t2` |
 | 创世格式 | v5 |
-| `expected_genesis_hash` | `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3` |
+| `expected_genesis_hash` | `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3`——**2026-10-03 已退役**,见上方更新 |
 | 创世文件（切换后） | `https://seed.qumbra.org/genesis.qmb`——对照哈希逐字节校验 |
 | T2 二进制 | 切换**之后**落在 <https://github.com/qumbra-labs/qumbra/releases> |
 | 矿池（stock XMRig） | `pool.qumbra.org:3333`——路径已写明，**暂缓**至宣布上线 |
