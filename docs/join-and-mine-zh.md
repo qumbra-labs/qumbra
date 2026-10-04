@@ -18,11 +18,15 @@ English: [`join-and-mine.md`](./join-and-mine.md) · **技术细节以英文版�
 
 > ### ⚠️ T1 已退役——本指南面向 T2
 >
+> 🔴 **T2 已于 2026-10-03 从创世 `59d9f054…44b1` 重启,`d1dad4ea…e2f3` 已退役。目前还没有
+> 公开版本支持新创世。** `t2-2026.08.25-1` 及之前的所有版本，构建所用的修订钉的都是
+> `d1dad4ea…e2f3`,连不上重启后的 T2。支持 `59d9f054` 的版本还没发布。
+>
 > **T1 已经关停。** 如果你在按本指南的旧版本操作：停下——它的数值已经作废。T1 余额
 > **不会带入**；T2 是从全新创世开始的公平重启——没有预挖、没有继承，区块 0 对所有人
 > （包括运营者）都是同一条起跑线。任何写着 T1 创世哈希（`138e1524…addb`）、`t1-*`
 > release tag、或高度 19,008 更新期限的东西，都属于已退役的网络，在这里不适用。T2 在
-> 构造上就是**另一个网络**：其创世文件为格式 **v5**、网络名 `qumbra-t2`
+> 构造上就是**另一个网络**：其创世文件为格式 **9**(v5 形式集)、网络名 `qumbra-t2`
 > （[`genesis.rs:630-636`](../crates/qumbra-node/src/genesis.rs#L630-L636)），钉错创世的
 > 节点拒绝启动，接错网的对等节点在 P2P 握手时被点名拒绝
 > （[`peer.rs:45-47`](../crates/qlab-p2p/src/peer.rs#L45-L47)，lab #474）——你不可能
@@ -166,9 +170,9 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
 
 公告同时一并发布这些网络身份输入：
 
-- `genesis.qmb`——**格式 v5，网络 `qumbra-t2`**
+- `genesis.qmb`——**格式 9(v5 形式集),网络 `qumbra-t2`**
   （[`genesis.rs:630-636`](../crates/qumbra-node/src/genesis.rs#L630-L636)）；
-- `expected_genesis_hash`——`d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3`；
+- `expected_genesis_hash`——`59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1`；
 - `dial_peers` 的初始 P2P 种子地址——`"18.202.166.126:9444", "18.141.177.109:9444", "52.194.224.123:9444", "52.5.0.21:9444"`。
 
 分发：`genesis.qmb` 从 **`https://seed.qumbra.org/genesis.qmb`** 下载（裸服务名在
@@ -189,7 +193,7 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
 **<https://github.com/qumbra-labs/qumbra/releases/latest>** —— 这个链接永远指向当前版本,
 这正是你要的。把某个 tag 写进本页,下次切版本它就过期了,而本页已经这样错过一次。
 
-🔴 **有两种情况会让你拿到错的版本,而且两种在运行前都能检查:**
+🔴 **有三种情况会让你拿到错的版本,而且都能在运行前检查:**
 
 * **绝不要拿 `t1-*` 的 tag 去连 T2。** T1 已退役。
 * **早于 `t2-a89dce6` 的 T2 版本,重启后打不开自己的数据目录**
@@ -197,6 +201,10 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
   [#524](https://github.com/qumbra-labs/qumbra-lab/issues/524))。**第一次跑没事,第二次才
   失败**——这是一个缺陷所能有的最坏形状:它能用、你信了它、然后在一次你没计划的重启上崩掉。
   `t2-a89dce6` 及更新版本已修。**如果你已经在跑更早的版本,在有什么东西替你触发重启之前先升级。**
+* **`t2-2026.08.25-1` 及之前的所有公开版本，钉的都是已退役的创世
+  `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3`,连不上 2026-10-03
+  重启后的 T2**(创世 `59d9f054…44b1`)。支持 `59d9f054` 的版本还没发布。下面的
+  `--print-net` 会打印二进制钉的创世，必须是 `59d9f054…` 才对。
 
 **别信这一页,去问那个二进制**——它知道自己是为哪张网构建的:
 
@@ -215,7 +223,7 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
 # 1 —— 从 release 页下载对应平台的归档与 SHA256SUMS，然后：
 sha256sum -c SHA256SUMS          # macOS 用：shasum -a 256 -c SHA256SUMS
 # TAG —— 从 releases 页设这一次;下面不再重复它
-TAG=t2-a89dce6                   # 或更新;见上面两条规则
+TAG=t2-a89dce6                   # 或更新;见上面三条规则——目前已发布的版本都不支持 59d9f054
 PLATFORM=linux-x86_64-glibc      # 或 linux-aarch64-glibc、macos-arm64…
 
 tar -xzf "qumbra-$TAG-$PLATFORM.tar.gz"
@@ -285,7 +293,7 @@ data_dir = "/data"
 listen_addr = "0.0.0.0:9400"
 dial_peers = ["18.202.166.126:9444", "18.141.177.109:9444", "52.194.224.123:9444", "52.5.0.21:9444"]
 genesis_file = "/config/genesis.qmb"
-expected_genesis_hash = "d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3"
+expected_genesis_hash = "59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1"
 mining = false
 ```
 
@@ -415,7 +423,7 @@ MSVC 构建上跑 RandomX 的四个官方参考向量，所以 Windows 矿工的
 
 ```powershell
 # 从 release 页取：对应平台的 zip 和 SHA256SUMS
-$TAG = "t2-a89dce6"   # 或更新;设这一次,下面不再重复
+$TAG = "t2-a89dce6"   # 或更新;设这一次,下面不再重复。目前还没有支持 59d9f054 的版本(见 §2.1)
 Get-FileHash ".\qumbra-$TAG-windows-x86_64.zip" -Algorithm SHA256
 # 与 SHA256SUMS 中对应行逐字比对打印出的哈希——用眼睛，64 个字符全部对上
 Expand-Archive ".\qumbra-$TAG-windows-x86_64.zip" -DestinationPath .

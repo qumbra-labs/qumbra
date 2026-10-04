@@ -22,13 +22,18 @@ block reward when you win one and makes you a full validator of the chain. The w
 
 > ### ⚠️ T1 IS RETIRED — this guide is for T2
 >
+> 🔴 **T2 was re-launched on 2026-10-03 from genesis `59d9f054…44b1`; `d1dad4ea…e2f3` is
+> retired. No public release pins the new genesis yet.** Every release up to and including
+> `t2-2026.08.25-1` is built from a revision that pins `d1dad4ea…e2f3`, so it cannot join
+> the re-launched T2. A release for `59d9f054` is pending.
+>
 > **T1 has shut down.** If you were following the previous version of this guide: stop —
 > its values are dead. T1 balances **do not carry over**; T2 is a fair relaunch from a
 > fresh genesis — no premine, no carry, block 0 is the same starting line for everyone,
 > including the operators. Anything you have that names the T1 genesis hash
 > (`138e1524…addb`), a `t1-*` release tag, or the height-19,008 update deadline belongs
 > to the retired net and does not apply here. T2 is a **different network by
-> construction**: its genesis file is format **v5**, network `qumbra-t2`
+> construction**: its genesis file is format **9** (the v5 form set), network `qumbra-t2`
 > ([`genesis.rs:630-636`](../crates/qumbra-node/src/genesis.rs#L630-L636)), a node
 > pinned to the wrong genesis refuses to start, and a wrong-net peer is refused by name
 > at the P2P handshake ([`peer.rs:45-47`](../crates/qlab-p2p/src/peer.rs#L45-L47),
@@ -191,9 +196,9 @@ test "$ACTUAL_REV" = "$EXPECTED_REV" || {
 
 The announcement also publishes these network-identity inputs together:
 
-- `genesis.qmb` — **format v5, network `qumbra-t2`**
+- `genesis.qmb` — **format 9 (the v5 form set), network `qumbra-t2`**
   ([`genesis.rs:630-636`](../crates/qumbra-node/src/genesis.rs#L630-L636));
-- `expected_genesis_hash` — `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3`;
+- `expected_genesis_hash` — `59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1`;
 - the initial P2P seed addresses for `dial_peers` — `"18.202.166.126:9444", "18.141.177.109:9444", "52.194.224.123:9444", "52.5.0.21:9444"`.
 
 Distribution: `genesis.qmb` downloads from **`https://seed.qumbra.org/genesis.qmb`**
@@ -220,7 +225,7 @@ releases page —
 the current release, which is what you want. A tag written into this page goes stale the next
 time we cut one, and this page has already been wrong that way once.
 
-🔴 **Two things make a release the wrong one, and both are checkable before you run it:**
+🔴 **Three things make a release the wrong one, and all are checkable before you run it:**
 
 * **Never run a `t1-*` tag against T2.** T1 is retired.
 * **T2 releases earlier than `t2-a89dce6` cannot reopen their own data directory after a
@@ -229,6 +234,10 @@ time we cut one, and this page has already been wrong that way once.
   *second* time**, which is the worst shape a defect can have: it works, you trust it, and it
   breaks on a restart you did not plan. `t2-a89dce6` and newer are fixed. **If you are already
   running an earlier one, update before something restarts it for you.**
+* **Public releases up to and including `t2-2026.08.25-1` pin the retired genesis
+  `d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3` and cannot join the
+  re-launched T2** (genesis `59d9f054…44b1`, 2026-10-03). A release for `59d9f054` is
+  pending. `--print-net` below shows which genesis a binary pins; it must print `59d9f054…`.
 
 **Ask the binary rather than trusting this page** — it knows which net it was built for:
 
@@ -247,7 +256,7 @@ time we cut one, and this page has already been wrong that way once.
 # 1 — download the archive for your platform and SHA256SUMS from the release page, then:
 sha256sum -c SHA256SUMS          # macOS: shasum -a 256 -c SHA256SUMS
 # TAG — set this ONCE from the releases page; nothing below repeats it.
-TAG=t2-a89dce6                   # or newer; see the two rules above
+TAG=t2-a89dce6                   # or newer; see the three rules above — none published yet pins 59d9f054
 PLATFORM=linux-x86_64-glibc      # or linux-aarch64-glibc, macos-arm64, …
 
 tar -xzf "qumbra-$TAG-$PLATFORM.tar.gz"
@@ -327,7 +336,7 @@ data_dir = "/data"
 listen_addr = "0.0.0.0:9400"
 dial_peers = ["18.202.166.126:9444", "18.141.177.109:9444", "52.194.224.123:9444", "52.5.0.21:9444"]
 genesis_file = "/config/genesis.qmb"
-expected_genesis_hash = "d1dad4ea2bc5bfc4880ecf25206d182cddeacc12b0f65eca1a1ce2f27a93e2f3"
+expected_genesis_hash = "59d9f054bb15116dac40c42ddb67c7d377407eec3010e9f98a5cc76e9e0544b1"
 mining = false
 ```
 
@@ -470,7 +479,7 @@ seeds. The differences:
 
 ```powershell
 # from the release page: the zip for your platform, and SHA256SUMS
-$TAG = "t2-a89dce6"   # or newer; set once, nothing below repeats it
+$TAG = "t2-a89dce6"   # or newer; set once, nothing below repeats it. No release yet pins 59d9f054 (see §2.1)
 Get-FileHash ".\qumbra-$TAG-windows-x86_64.zip" -Algorithm SHA256
 # compare the printed hash against the matching line in SHA256SUMS — by eye, all 64 chars
 Expand-Archive ".\qumbra-$TAG-windows-x86_64.zip" -DestinationPath .
